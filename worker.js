@@ -31,37 +31,35 @@ let environ = {'HTTP_ACCEPT': 'image/avif,image/webp,image/apng,image/svg+xml,im
 'wsgi.url_scheme': 'http',
 'wsgi.version': (1, 0)}
 
-async function main() {
-    const pyodide = await loadPyodide();
+let pyodide, app;
+
+function start_response(status, response_headers, exc_info) {        
+}
+
+async function init() {
+    pyodide = await loadPyodide();
     await pyodide.loadPackage("micropip");
     const micropip = pyodide.pyimport("micropip");
     await micropip.install('flask')
-    let processRequest = function(req) {
-        console.log(req)
-    }
 
-    pyodide.runPython(`
-    from flask import Flask, render_template
+    self.postMessage({'command':'ready'})
+}
 
-    app = Flask(__name__)
+async function main(src) {
+    pyodide.runPython(src)
 
-    @app.route("/")
-    def index():
-        return "Hello!"
-    `)
+    app = pyodide.globals.get("app").toJs();
 
-    let app = pyodide.globals.get("app").toJs();
-
-
-    function start_response(status, response_headers, exc_info) {
-        
-    }
-
-    self.onmessage = function(event) {
-        let r = app(pyodide.toPy(environ), start_response).toJs()
-        console.log(r.__next__().toString())
-    }
 
 }
 
-main()
+init()
+
+self.onmessage = function(msg) {
+    console.log(msg)
+    main(msg.data.src)
+    let r = app(pyodide.toPy(environ), start_response).toJs()
+    let response = r.__next__().toString()
+    response = response.slice(2, response.length-1)
+    self.postMessage({'command':'response', 'data':response})
+}
