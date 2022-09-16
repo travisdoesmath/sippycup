@@ -20,7 +20,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    return {"Hello": "World"}
+    return render_template('index.html')
     </textarea>
     <button id="run" disabled>Loading...</button>
     <iframe></iframe>
@@ -45,7 +45,7 @@ def index():
             if (msg.data.command == "response") {
                 let iframe = document.querySelector('iframe')
                 console.log(msg.data.data)
-                const blob = new Blob([msg.data.data.replace('\\n', '\n')], {type: 'text/html'});
+                const blob = new Blob([msg.data.data.replace(/\\n/g, '\n')], {type: 'text/html'});
                 iframe.src = window.URL.createObjectURL(blob);
             }
         })

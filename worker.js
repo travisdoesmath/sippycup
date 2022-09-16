@@ -33,11 +33,36 @@ let environ = {'HTTP_ACCEPT': 'image/avif,image/webp,image/apng,image/svg+xml,im
 
 let pyodide, app;
 
+let template = 
+`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>{{ msg }}</h1>
+</body>
+</html>`
+
 function start_response(status, response_headers, exc_info) {        
 }
 
 async function init() {
     pyodide = await loadPyodide();
+
+    pyodide.runPython(
+`import os
+
+os.mkdir('templates')
+
+with open("templates/index.html", "w") as fh:
+    fh.write("""${template}
+    """)
+  `);
+
     await pyodide.loadPackage("micropip");
     const micropip = pyodide.pyimport("micropip");
     await micropip.install('flask')
