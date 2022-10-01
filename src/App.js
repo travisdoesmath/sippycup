@@ -2,16 +2,26 @@
 import { React, useState } from "react";
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import TabbedEditor from "./TabbedEditor";
 import Console from "./Console";
 import { css } from '@emotion/react'
-
+import { src } from './init';
 
 
 
 function App() {
   const [stdout, updateStdout] = useState('');
+  const [pythonSrc, updatePythonSrc] = useState(src.python);
+  const [htmlSrc, updateHtmlSrc] = useState(src.html);
+  const [cssSrc, updateCssSrc] = useState(src.css);
   const sippycup = new Worker(new URL('./sippycup.js', import.meta.url));
+
+  function runCode(code) {
+    sippycup.postMessage({src: pythonSrc})
+  }
+
+  
 
   sippycup.addEventListener("message", function handleMessage(msg) {
     if (msg.data.command === "ready") {
@@ -42,19 +52,37 @@ function App() {
 
 
   return (
-    
       <Grid container height="100vh">
         <Grid item xs={6} sx={{display:'flex', flexDirection:'column'}}>
-          <TabbedEditor />
+          <TabbedEditor tabs={[
+            {
+              filename:'app.py',
+              language:'python',
+              initialSrc: pythonSrc
+            },
+            {
+              filename:'index.html',
+              language:'html',
+              initialSrc: htmlSrc
+            },
+            {
+              filename:'index.css',
+              language:'css',
+              initialSrc: cssSrc
+            },
+            
+          ]}/>
         </Grid>
-        <Grid item xs={6} height="50vh">
+        <Grid item xs={12} height="5vh">
+          <Button onClick={runCode}>Run</Button>
+        </Grid>
+        <Grid item xs={6} height="40vh">
           <iframe css={css`border:none`} title="Output" id="output"></iframe>
         </Grid>
-        <Grid item xs={6} height="50vh">
+        <Grid item xs={6} height="40vh">
           <Console></Console>
         </Grid>
       </Grid>
-    
   );
 }
 

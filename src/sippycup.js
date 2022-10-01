@@ -87,11 +87,12 @@ async function main(src) {
 
 init()
 
-self.onmessage = function(msg) {
+self.onmessage = async function(msg) {
     console.log(msg)
-    main(msg.data.src)
+    await main(msg.data.src)
+    console.log('app', app)
     let r = app(pyodide.toPy(environ), start_response).toJs()
     let response = r.__next__().toString()
     response = response.slice(2, response.length-1)
-    window.self.postMessage({'command':'response', 'data':response})
+    self.postMessage({'command':'response', 'data':response})
 }

@@ -2,7 +2,6 @@ import * as React from 'react';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid';
 
 import Editor from "@monaco-editor/react";
 
@@ -33,59 +32,37 @@ function TabPanel(props) {
     );
   }
 
-const pythonStarterSrc = `from flask import Flask, render_template
-
-app = Flask(__name__)
-
-@app.route("/")
-def index():
-    return render_template("index.html")
-`
-
 
 function TabbedEditor(props) {
+  console.log('props', props)
     const [value, setValue] = React.useState(0);
-    const [pythonSrc, setPythonSrc] = React.useState(pythonStarterSrc)
-
+    
     const handleChange = (event, newValue) => {
       setValue(newValue);
     };
+
+    const tabs = props.tabs.map(tab => <Tab label={tab.filename} {...a11yProps(0)}/>)
+    const editors = props.tabs.map((tab, i) => <>
+      <TabPanel value={value} index={i} className="editor-tab">
+        <Editor
+          height="100%"
+          defaultLanguage={tab.language}
+          defaultValue={tab.initialSrc}
+          theme="vs-dark"
+        />
+      </TabPanel>
+    </>)
 
     return (
       <>
         <Box sx={{display:'flex', flexDirection:'column', height:'100%'}}>
           <Box sx={{flex: '0 0 auto'}}>
             <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
-                <Tab label="app.py" {...a11yProps(0)}/>
-                <Tab label="index.html" {...a11yProps(0)}/>
-                <Tab label="style.css" {...a11yProps(0)}/>
+                { tabs }
             </Tabs>
           </Box>
           <Box sx={{flex: 1}}>
-            <TabPanel value={value} index={0} className="editor-tab">
-                <Editor
-                height="100%"
-                defaultLanguage="python"
-                defaultValue={ pythonSrc }
-                theme='vs-dark'
-                />
-            </TabPanel>
-            <TabPanel value={value} index={1} className="editor-tab">
-                <Editor
-                height="100%"
-                defaultLanguage="html"
-                defaultValue="// html template"
-                theme='vs-dark'
-                />
-            </TabPanel>
-            <TabPanel value={value} index={2} className="editor-tab">
-              <Editor
-                  height="100%"
-                  defaultLanguage="css"
-                  defaultValue="/* css */"
-                  theme='vs-dark'
-                  />
-            </TabPanel>
+            { editors }
           </Box>
         </Box>
         </>
