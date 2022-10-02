@@ -9,16 +9,20 @@ import { css } from '@emotion/react'
 import { src } from './init';
 
 
+const sippycup = new Worker(new URL('./sippycup.js', import.meta.url));
 
 function App() {
   const [stdout, updateStdout] = useState('');
   const [pythonSrc, updatePythonSrc] = useState(src.python);
   const [htmlSrc, updateHtmlSrc] = useState(src.html);
   const [cssSrc, updateCssSrc] = useState(src.css);
-  const sippycup = new Worker(new URL('./sippycup.js', import.meta.url));
-
+  const [htmlOutput, updateHtmlOutput] = useState('');
+  
   function runCode(code) {
-    sippycup.postMessage({src: pythonSrc})
+    console.log('runCode called')
+    sippycup.postMessage({command:"updateFile", filename:"index.html", content:htmlSrc})
+    sippycup.postMessage({command:"updateFile", filename:"style.css", content:cssSrc})
+    sippycup.postMessage({command:"run", src: pythonSrc})
   }
 
   
@@ -39,14 +43,15 @@ function App() {
         })
     }
     if (msg.data.command === "response") {
-        let iframe = document.querySelector('iframe')
-        console.log(msg.data.data)
-        const blob = new Blob([msg.data.data.replace(/\\n/g, '\n')], {type: 'text/html'});
-        iframe.src = window.URL.createObjectURL(blob);
+      updateHtmlOutput(msg.data.data.replace(/\\n/g, '\n'))
     }
   
     if (msg.data.command === "stdout") {
       
+    }
+
+    if (msg.data.command === "appReady") {
+
     }
   })
 
@@ -58,17 +63,20 @@ function App() {
             {
               filename:'app.py',
               language:'python',
-              initialSrc: pythonSrc
+              initialSrc: pythonSrc,
+              changeHandler: updatePythonSrc
             },
             {
               filename:'index.html',
               language:'html',
-              initialSrc: htmlSrc
+              initialSrc: htmlSrc,
+              changeHandler: updateHtmlSrc
             },
             {
               filename:'index.css',
               language:'css',
-              initialSrc: cssSrc
+              initialSrc: cssSrc,
+              changeHandler: updateCssSrc
             },
             
           ]}/>
@@ -77,7 +85,7 @@ function App() {
           <Button onClick={runCode}>Run</Button>
         </Grid>
         <Grid item xs={6} height="40vh">
-          <iframe css={css`border:none`} title="Output" id="output"></iframe>
+          <iframe css={css`border:none`} title="Output" id="output" srcDoc={ htmlOutput }></iframe>
         </Grid>
         <Grid item xs={6} height="40vh">
           <Console></Console>

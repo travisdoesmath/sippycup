@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", msg="Hello, World!")
 `,
 
     html: `<!DOCTYPE html>
@@ -18,7 +18,7 @@ def index():
     <title>My Fullstack App</title>
 </head>
 <body>
-    
+    <h1>{{ msg }}</h1>
 </body>
 </html>
 `,

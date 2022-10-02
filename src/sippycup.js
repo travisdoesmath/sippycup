@@ -37,19 +37,19 @@ let environ = {'HTTP_ACCEPT': 'image/avif,image/webp,image/apng,image/svg+xml,im
 
 let pyodide, app;
 
-let template = 
-`<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>{{ msg }}</h1>
-</body>
-</html>`
+// let template = 
+// `<!DOCTYPE html>
+// <html lang="en">
+// <head>
+//     <meta charset="UTF-8">
+//     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+//     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//     <title>Document</title>
+// </head>
+// <body>
+//     <h1>{{ msg }}</h1>
+// </body>
+// </html>`
 
 function start_response(status, response_headers, exc_info) {        
 }
@@ -64,17 +64,26 @@ async function init() {
 `import os
 
 os.mkdir('templates')
-
-with open("templates/index.html", "w") as fh:
-    fh.write("""${template}
-    """)
 `);
+// with open("templates/index.html", "w") as fh:
+//     fh.write("""${template}
+//     """)
+// `);
 
     await pyodide.loadPackage("micropip");
     const micropip = pyodide.pyimport("micropip");
     await micropip.install('flask')
 
     self.postMessage({'command':'ready'})
+}
+
+async function updateFile(filename, content) {
+    const src=`
+with open("templates/${filename}", "w") as file:
+    file.write("""${content}""")
+`        
+    console.log('src', src)
+    pyodide.runPython(src)
 }
 
 async function main(src) {
@@ -88,11 +97,43 @@ async function main(src) {
 init()
 
 self.onmessage = async function(msg) {
-    console.log(msg)
-    await main(msg.data.src)
-    console.log('app', app)
-    let r = app(pyodide.toPy(environ), start_response).toJs()
-    let response = r.__next__().toString()
-    response = response.slice(2, response.length-1)
-    self.postMessage({'command':'response', 'data':response})
+    function getCssBlob() {
+        return new Blob(getCss())
+    }
+
+    function getCss() {
+        pyodide.runPython(`
+with open("templates/style.css", "r") as file:
+    css = file.readlines()    
+`
+        )
+        let css = pyodide.globals.get("css").toJs();
+        console.log('css', css)
+        return css.join('')
+    }
+
+    function handleRequest() {
+        let r = app(pyodide.toPy(environ), start_response).toJs()
+        let response = r.__next__().toString()
+        response = response.slice(2, response.length-1)
+        response = response.replace(`<link rel="stylesheet" href="style.css">`, `<style>${getCss()}</style>`)
+        console.log('response:', response)
+        self.postMessage({'command':'response', 'data':response})    
+    }
+
+    if (msg.data.command === "updateFile") {
+        const filename = msg.data.filename;
+        const content = msg.data.content;
+        updateFile(filename, content)
+        console.log(`${filename} updated`)
+    }
+    if (msg.data.command === "request") {
+        // await main(msg.data.src)
+        handleRequest()
+    }
+    if (msg.data.command === "run") {
+        await main(msg.data.src)
+        self.postMessage({command:'appRunning'})
+        handleRequest()
+    }
 }

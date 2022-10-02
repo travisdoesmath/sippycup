@@ -34,7 +34,6 @@ function TabPanel(props) {
 
 
 function TabbedEditor(props) {
-  console.log('props', props)
     const [value, setValue] = React.useState(0);
     
     const handleChange = (event, newValue) => {
@@ -49,6 +48,7 @@ function TabbedEditor(props) {
           defaultLanguage={tab.language}
           defaultValue={tab.initialSrc}
           theme="vs-dark"
+          onChange={tab.changeHandler}
         />
       </TabPanel>
     </>)
