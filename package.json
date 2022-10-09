@@ -1,0 +1,19 @@
+{
+  "name": "sippycup",
+  "version": "1.0.0",
+  "description": "",
+  "main": "sippycup.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/travisdoesmath/sippycup.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/travisdoesmath/sippycup/issues"
+  },
+  "homepage": "https://github.com/travisdoesmath/sippycup#readme"
+}

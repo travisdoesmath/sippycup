@@ -1,4 +1,8 @@
-importScripts("https://cdn.jsdelivr.net/pyodide/v0.21.2/full/pyodide.js");
+/* eslint-disable no-restricted-globals */
+// eslint-disable-next-line no-undef
+importScripts("https://cdn.jsdelivr.net/pyodide//v0.21.3/full/pyodide.js");
+
+// eslint-disable-next-line no-restricted-globals
 let environ = {'HTTP_ACCEPT': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
 'HTTP_ACCEPT_ENCODING': 'gzip, deflate, br',
 'HTTP_ACCEPT_LANGUAGE': 'en,en-US;q=0.9',
@@ -33,58 +37,82 @@ let environ = {'HTTP_ACCEPT': 'image/avif,image/webp,image/apng,image/svg+xml,im
 
 let pyodide, app;
 
-let template = 
-`<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>{{ msg }}</h1>
-</body>
-</html>`
+let pyFiles = {};
 
-function start_response(status, response_headers, exc_info) {        
-}
+let ready = false;
 
 async function init() {
-    pyodide = await loadPyodide();
+    // eslint-disable-next-line no-undef
+    pyodide = await loadPyodide({ stdout: (output) => {
+        self.postMessage({'type':'stdout', 'content':output})
+    }});
 
     pyodide.runPython(
 `import os
 
 os.mkdir('templates')
-
-with open("templates/index.html", "w") as fh:
-    fh.write("""${template}
-    """)
-  `);
+`);
 
     await pyodide.loadPackage("micropip");
     const micropip = pyodide.pyimport("micropip");
     await micropip.install('flask')
 
-    self.postMessage({'command':'ready'})
+    pyodide.runPython(`print('Python modules installed')`)
 }
 
-async function main(src) {
-    pyodide.runPython(src)
+async function updateFile(filename, path, content) {
+    const src=`
+import os
 
-    app = pyodide.globals.get("app").toJs();
+if not os.path.exists("${path}"):
+    os.mkdir("${path}")
 
-
+with open("${path}/${filename}", "w") as file:
+    file.write("""${content}""")
+`
+    if (filename.slice(-3) === '.py') {
+        pyFiles[`${path}/${filename}`] = content
+    } else {
+        pyodide.runPython(src)
+    }
 }
 
-init()
+addEventListener("message", async (event) => {
+    const port = event.ports[0]
+    const msg = event.data
 
-self.onmessage = function(msg) {
-    console.log(msg)
-    main(msg.data.src)
-    let r = app(pyodide.toPy(environ), start_response).toJs()
+    try {
+        if (msg.type === 'readyRequest') {
+            if (!ready) {
+                await init();
+                ready = true;
+            }
+            port.postMessage({type:'ready'})
+        }
+        if (msg.type === 'updateFile') {
+            updateFile(msg.filename, msg.path, msg.content)
+
+            port.postMessage({type:'ready', result:`${msg.filename} updated`})
+        }
+        if (msg.type === 'startApp') {
+            pyodide.runPython(pyFiles['/app.py'])
+            app = pyodide.globals.get("app").toJs();    
+            port.postMessage({type:'appReady'})
+        }
+        if (msg.type === 'request') {
+            response = await handleRequest(msg.request, port);
+            port.postMessage({type:'response', result:response})
+        }
+    } catch(e) {
+        port.postMessage({error: e});
+    }
+    port.close();
+})
+
+handleRequest = (request, port) => {
+    let r = app(pyodide.toPy(environ), () => {}).toJs()
     let response = r.__next__().toString()
     response = response.slice(2, response.length-1)
-    self.postMessage({'command':'response', 'data':response})
+    return response
+    
 }
