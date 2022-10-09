@@ -1,6 +1,6 @@
 class Sippycup {
     #worker;
-  constructor(stdoutHandler) {
+  constructor(stdoutHandler = console.debug) {
     this.#worker = new Worker(new URL("./worker.js", import.meta.url));
     this.ready = false;
     this.#worker.addEventListener("message", ({data}) => {
@@ -85,19 +85,22 @@ class Sippycup {
   }
 
   async #parseHtml(html) {
-    let localUrls = new Set(html.match(/(?<=src=|href=)(['"])(?![a-zA-Z+]*:\/\/)(.*)\1/g).map(s => s.slice(1, -1)))
+    let localUrls = html.match(/(?<=src=|href=)(['"])(?![a-zA-Z+]*:\/\/)(.*)\1/g)
+    if (localUrls) {
+        localUrls = new Set(localUrls.map(s => s.slice(1, -1)))
 
-    let localContent = {}
+        let localContent = {}
 
-    await Promise.all([...localUrls].map(async url => {
-        let response = await this.request(url)
-        let content = URL.createObjectURL(new Blob([response.content]))
-        localContent[url] = content
-    }))
-
-    Object.keys(localContent).forEach(url => {
-        html = html.replace(url, localContent[url])
-    })
+        await Promise.all([...localUrls].map(async url => {
+            let response = await this.request(url)
+            let content = URL.createObjectURL(new Blob([response.content]))
+            localContent[url] = content
+        }))
+    
+        Object.keys(localContent).forEach(url => {
+            html = html.replace(url, localContent[url])
+        })    
+    }
 
     return html
 
