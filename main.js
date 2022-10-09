@@ -15,7 +15,7 @@ Promise.all([
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="style.css">
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
         <title>My Flask App</title>
     </head>
     <body>
@@ -41,8 +41,7 @@ Promise.all([
     sippycup.addFile('style.css', 'static', `
     body, html {
         margin: 0;
-        height: 100%;
-        width: 100%;
+        background: red;
     }
     `)
 ]).then(() => {
@@ -53,5 +52,4 @@ Promise.all([
     iframe.setAttribute('srcdoc', response.content)
     document.querySelector('body').append(iframe)
 
-    console.log(response)
 })

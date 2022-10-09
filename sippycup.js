@@ -47,7 +47,6 @@ class Sippycup {
   }
 
   async addFile(filename, path, content) {
-    // console.log('addFile called: ', filename)
     await this.updateFile(filename, path, content);
   }
 
@@ -74,13 +73,35 @@ class Sippycup {
             request: request
         }
         const response = await this.#sendMessageToWorker(msg);
+
+        if (response.header['Content-Type'] && response.header['Content-Type'].includes('text/html')) {
+            response.content = await this.#parseHtml(response.content);
+        }
+
         return response
     } catch(e) {
         console.error(e.message);
     }
   }
 
-  #parseHtml(html) {}
+  async #parseHtml(html) {
+    let localUrls = new Set(html.match(/(?<=src=|href=)(['"])(?![a-zA-Z+]*:\/\/)(.*)\1/g).map(s => s.slice(1, -1)))
+
+    let localContent = {}
+
+    await Promise.all([...localUrls].map(async url => {
+        let response = await this.request(url)
+        let content = URL.createObjectURL(new Blob([response.content]))
+        localContent[url] = content
+    }))
+
+    Object.keys(localContent).forEach(url => {
+        html = html.replace(url, localContent[url])
+    })
+
+    return html
+
+  }
 }
 
 export default Sippycup;

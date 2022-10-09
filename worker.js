@@ -89,14 +89,16 @@ handleRequest = (request) => {
     startResponse = (status, headers) => {
         let _headers = {}
         headers.toJs().forEach(([key, value]) => { _headers[key] = value; })
-        response['status'] = status;
-        response['headers'] = _headers;
+        response.status = status;
+        response.header = _headers;
         
     }
     let r = app(pyodide.toPy(environ), startResponse).toJs()
     
     response['content'] = r.__next__().toString().slice(2, -1).replace(/\\n/g, '\n') 
     // toString() includes the bytestring literal prefix and quotes; slice(2, -1) removes them.
+
+    
     
     return response    
 }
