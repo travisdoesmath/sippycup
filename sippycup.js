@@ -14,9 +14,6 @@ class Sippycup {
     await this.#sendMessageToWorker({type:'readyRequest'})
 
     this.#worker.addEventListener("message", ({data}) => {
-        if (data.type === 'stdout') {
-            stdoutHandler(data.content)
-        }
         if (data.type === 'ready') {
             this.ready = true;
         }

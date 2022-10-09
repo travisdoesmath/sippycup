@@ -32,6 +32,10 @@ Promise.all([
     @app.route("/")
     def index():
         return render_template("index.html", msg="Hello, World!")
+
+    @app.route("/data")
+    def data():
+        return {"hello":"world"}
     `),
     
     sippycup.addFile('style.css', 'static', `
@@ -43,7 +47,7 @@ Promise.all([
     `)
 ]).then(() => {
     sippycup.startApp()
-}).then(() => sippycup.request('/'))
+}).then(() => sippycup.request('/data'))
 .then((response) => {
     console.log(response)
 })
