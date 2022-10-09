@@ -85,11 +85,18 @@ handleRequest = (request) => {
         'wsgi.url_scheme': 'http',
         'wsgi.version': (1, 0)
     }
-    startResponse = (d) => {
-        console.log(d)
+    let response = {}
+    startResponse = (status, headers) => {
+        let _headers = {}
+        headers.toJs().forEach(([key, value]) => { _headers[key] = value; })
+        response['status'] = status;
+        response['headers'] = _headers;
+        
     }
     let r = app(pyodide.toPy(environ), startResponse).toJs()
-    console.log('r', r)
-    let response = r.__next__().toString().slice(2, -1) // toString() includes the bytestring literal prefix and quotes; slice(2, -1) removes them.
+    
+    response['content'] = r.__next__().toString().slice(2, -1).replace(/\\n/g, '\n') 
+    // toString() includes the bytestring literal prefix and quotes; slice(2, -1) removes them.
+    
     return response    
 }

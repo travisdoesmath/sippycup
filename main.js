@@ -47,7 +47,11 @@ Promise.all([
     `)
 ]).then(() => {
     sippycup.startApp()
-}).then(() => sippycup.request('/data'))
+}).then(() => sippycup.request('/'))
 .then((response) => {
+    let iframe = document.createElement('iframe')
+    iframe.setAttribute('srcdoc', response.content)
+    document.querySelector('body').append(iframe)
+
     console.log(response)
 })
