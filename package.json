@@ -1,6 +1,6 @@
 {
   "name": "@travisdoesmath/sippycup",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "An in-browser, serverless implementation of the python micro web framework Flask",
   "main": "lib/index.js",
   "directories": {
