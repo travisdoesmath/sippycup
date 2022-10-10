@@ -101,9 +101,8 @@ const handleRequest = (request) => {
   response["content"] = r
     .__next__()
     .toString()
-    .slice(2, -1)
+    .slice(2, -1) // toString() includes the bytestring literal prefix and quotes; slice(2, -1) removes them.
     .replace(/\\n/g, "\n");
-  // toString() includes the bytestring literal prefix and quotes; slice(2, -1) removes them.
 
   return response;
 };

@@ -3,6 +3,7 @@
   "version": "0.1.1",
   "description": "An in-browser, serverless implementation of the python micro web framework Flask",
   "main": "lib/index.js",
+  "type": "module",
   "directories": {
     "test": "test"
   },
@@ -21,12 +22,14 @@
   },
   "homepage": "https://github.com/travisdoesmath/sippycup#readme",
   "dependencies": {
+    "@travisdoesmath/sippycup": "^0.1.0",
     "npm-packlist": "^7.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.19.3",
     "@babel/core": "^7.19.3",
     "@babel/preset-env": "^7.19.4",
+    "chai": "^4.3.6",
     "eslint": "^8.25.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-config-standard": "^17.0.0",
@@ -34,6 +37,7 @@
     "eslint-plugin-n": "^15.3.0",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-promise": "^6.0.1",
-    "eslint-plugin-react": "^7.31.9"
+    "eslint-plugin-react": "^7.31.9",
+    "mocha": "^10.0.0"
   }
 }
