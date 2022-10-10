@@ -24,8 +24,6 @@ class Sippycup {
     await this.#sendMessageToWorker({ type: "startApp" });
   }
 
-  #handleMessageFromWorker({ data }) {}
-
   #sendMessageToWorker(msg) {
     return new Promise((resolve, reject) => {
       const channel = new MessageChannel();

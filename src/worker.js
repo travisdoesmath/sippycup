@@ -1,4 +1,3 @@
-/* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-undef
 importScripts("https://cdn.jsdelivr.net/pyodide//v0.21.3/full/pyodide.js");
 
@@ -70,7 +69,7 @@ addEventListener("message", async (event) => {
       port.postMessage({ type: "appReady" });
     }
     if (msg.type === "request") {
-      response = await handleRequest(msg.request, port);
+      const response = await handleRequest(msg.request, port);
       port.postMessage({ type: "response", result: response });
     }
   } catch (e) {
@@ -79,7 +78,7 @@ addEventListener("message", async (event) => {
   port.close();
 });
 
-handleRequest = (request) => {
+const handleRequest = (request) => {
   const environ = {
     REQUEST_METHOD: "GET",
     PATH_INFO: request,
@@ -89,7 +88,7 @@ handleRequest = (request) => {
     "wsgi.version": (1, 0),
   };
   let response = {};
-  startResponse = (status, headers) => {
+  const startResponse = (status, headers) => {
     let _headers = {};
     headers.toJs().forEach(([key, value]) => {
       _headers[key] = value;
