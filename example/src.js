@@ -11,7 +11,7 @@ export const htmlSrc = `<!DOCTYPE html>
     <h1>{{ msg }}</h1>
 </body>
 </html>
-`
+`;
 
 export const pythonSrc = `from flask import Flask, render_template
 
@@ -24,10 +24,10 @@ def index():
 @app.route("/data")
 def data():
     return {"hello":"world"}
-`
+`;
 
 export const cssSrc = `body, html {
     margin: 0;
     background: red;
 }
-`
+`;

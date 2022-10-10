@@ -1,10 +1,14 @@
 {
-  "name": "sippycup",
-  "version": "1.0.0",
-  "description": "",
-  "main": "sippycup.js",
+  "name": "@travisdoesmath/sippycup",
+  "version": "0.1.0",
+  "description": "An in-browser, serverless implementation of the python micro web framework Flask",
+  "main": "lib/index.js",
+  "directories": {
+    "test": "test"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "babel src -d lib"
   },
   "repository": {
     "type": "git",
@@ -15,5 +19,13 @@
   "bugs": {
     "url": "https://github.com/travisdoesmath/sippycup/issues"
   },
-  "homepage": "https://github.com/travisdoesmath/sippycup#readme"
+  "homepage": "https://github.com/travisdoesmath/sippycup#readme",
+  "dependencies": {
+    "npm-packlist": "^7.0.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.19.3",
+    "@babel/core": "^7.19.3",
+    "@babel/preset-env": "^7.19.4"
+  }
 }
