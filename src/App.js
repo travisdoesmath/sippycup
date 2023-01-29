@@ -3,13 +3,21 @@ import { React, useState } from "react";
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
 import TabbedEditor from "./TabbedEditor";
 import Console from "./Console";
 import { css } from '@emotion/react'
 import { src } from './init';
-
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from "@mui/material/CssBaseline";
 
 const sippycup = new Worker(new URL('./sippycup.js', import.meta.url));
+
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+  },
+});
 
 function App() {
   const [stdout, updateStdout] = useState('');
@@ -57,40 +65,48 @@ function App() {
 
 
   return (
+    <ThemeProvider theme={darkTheme}>
+      <CssBaseline />
       <Grid container height="100vh">
         <Grid item xs={6} sx={{display:'flex', flexDirection:'column'}}>
-          <TabbedEditor tabs={[
-            {
-              filename:'app.py',
-              language:'python',
-              initialSrc: pythonSrc,
-              changeHandler: updatePythonSrc
-            },
-            {
-              filename:'index.html',
-              language:'html',
-              initialSrc: htmlSrc,
-              changeHandler: updateHtmlSrc
-            },
-            {
-              filename:'index.css',
-              language:'css',
-              initialSrc: cssSrc,
-              changeHandler: updateCssSrc
-            },
-            
-          ]}/>
-        </Grid>
-        <Grid item xs={12} height="5vh">
-          <Button onClick={runCode}>Run</Button>
-        </Grid>
-        <Grid item xs={6} height="40vh">
-          <iframe css={css`border:none`} title="Output" id="output" srcDoc={ htmlOutput }></iframe>
-        </Grid>
-        <Grid item xs={6} height="40vh">
-          <Console></Console>
+          <Stack>
+            <Box>
+              <TabbedEditor files={[
+                {
+                  name:'app.py',
+                  language:'python',
+                  src: pythonSrc,
+                  changeHandler: updatePythonSrc
+                },
+                {
+                  name:'index.html',
+                  language:'html',
+                  src: htmlSrc,
+                  changeHandler: updateHtmlSrc
+                },
+                {
+                  name:'style.css',
+                  language:'css',
+                  src: cssSrc,
+                  changeHandler: updateCssSrc
+                },
+                
+              ]}/>
+            </Box>
+            <Box>
+              <Button onClick={runCode}>Run</Button>
+            </Box>
+            <Box sx={{height:'40vh'}}>
+              <Console></Console>
+            </Box>
+          </Stack>
+          
+        </Grid>        
+        <Grid item xs={6} height="95vh">
+          <iframe css={css`border:none; height:95%`} title="Output" id="output" srcDoc={ htmlOutput }></iframe>
         </Grid>
       </Grid>
+    </ThemeProvider>
   );
 }
 
