@@ -134,6 +134,8 @@ with open("templates/style.css", "r") as file:
     }
     if (msg.data.command === "run") {
         await main(msg.data.src)
+        self.postMessage({'command':'stdout', 'data':"* Serving Flask app 'app'"})
+        self.postMessage({'command':'stdout', 'data':" * Running on http://127.0.0.1:5000"})
         self.postMessage({command:'appRunning'})
         handleRequest()
     }

@@ -8,6 +8,12 @@ import Editor from "@monaco-editor/react";
 
 export function TabbedEditor(props) {
   const [fileName, setFileName] = useState(props.files[0].name)
+  const [value, setValue] = useState(0);
+
+  const handleChange = (event, newValue) => {
+    setValue(newValue);
+    setFileName(fileNames[newValue])
+  };
 
   const files = props.files;
 
@@ -16,12 +22,14 @@ export function TabbedEditor(props) {
 
   const fileNames = props.files.map(file => file.name)
 
-  const tabs = fileNames.map(name => <Tab key={name} label={name} onChange={() => setFileName(name)} />)
+  const tabs = fileNames.map((name, i) => <Tab key={name} value={i} label={name}  />)
 
   return (
       <>
           <Box>
+            <Tabs value={value} onChange={handleChange} >
             { tabs }
+            </Tabs>
           </Box>
           <Editor 
               height="40vh"
@@ -30,6 +38,10 @@ export function TabbedEditor(props) {
               defaultLanguage={file.language}
               defaultValue={file.src}
               onChange={file.changeHandler}
+              options={{
+                scrollBeyondLastLine: false
+              }}
+
           />
       </>
   )
