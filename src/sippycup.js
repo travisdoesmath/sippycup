@@ -51,7 +51,8 @@ let pyodide, app;
 // </body>
 // </html>`
 
-function start_response(status, response_headers, exc_info) {        
+function start_response(status, response_headers, exc_info) {   
+    self.postMessage({'command':'stdout', 'message': `${status} ${response_headers}`})     
 }
 
 async function init() {

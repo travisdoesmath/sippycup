@@ -11,7 +11,17 @@ import { src } from './init';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from "@mui/material/CssBaseline";
 
+// output window
+import PublicIcon from '@mui/icons-material/Public';
+import Tab from '@mui/material/Tab';
+import Typography from "@mui/material/Typography";
+import TextField from '@mui/material/TextField';
+import Input from '@mui/material/Input';
+import RefreshIcon from '@mui/icons-material/Refresh';
+
+
 const sippycup = new Worker(new URL('./sippycup.js', import.meta.url));
+
 
 const darkTheme = createTheme({
   palette: {
@@ -32,6 +42,7 @@ function App() {
     sippycup.postMessage({command:"updateFile", filename:"style.css", content:cssSrc})
     sippycup.postMessage({command:"run", src: pythonSrc})
   }
+  
 
   
 
@@ -55,7 +66,7 @@ function App() {
     }
   
     if (msg.data.command === "stdout") {
-      
+      console.log("STDOUT: ", msg.data.message)
     }
 
     if (msg.data.command === "appReady") {
@@ -103,7 +114,23 @@ function App() {
           
         </Grid>        
         <Grid item xs={6} height="95vh">
-          <iframe css={css`border:none; height:95%`} title="Output" id="output" srcDoc={ htmlOutput }></iframe>
+          <Box sx={{background: "#222", "border-radius":"15px 15px 0 0 "}}><Tab sx={{"min-height": "40px", height: '40px', background: "#333", "border-radius":"15px 15px 0 0"}} icon={<PublicIcon />} iconPosition="start" label={"My Flask App"}></Tab></Box>
+          <Box sx={{width: "100%", background: "#333"}}>
+            <Button size="small" sx={{"min-width": 0, "margin-left":"10px", "margin-bottom":"2.5px"}}><RefreshIcon></RefreshIcon></Button>
+            <Input sx={{ margin: "5px 0 5px 5px",
+                         border: "solid 2px #4AF", 
+                         "border-radius": "50px",
+                         padding: "0px 20px",
+                         width: "80%",
+                         "& .MuiInput-input": {
+                            padding: 0
+                         }
+                        }} 
+                   size="small"  
+                   disableUnderline
+                   defaultValue="http://localhost:5000/"></Input>
+          </Box>
+          <iframe css={css`border:none; height:95%; background: white`} title="Output" id="output" srcDoc={ htmlOutput }></iframe>
         </Grid>
       </Grid>
     </ThemeProvider>
