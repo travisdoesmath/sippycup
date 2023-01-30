@@ -3,6 +3,9 @@ import { useState } from 'react';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 
 import Editor from "@monaco-editor/react";
 
@@ -27,12 +30,16 @@ export function TabbedEditor(props) {
   return (
       <>
           <Box>
-            <Tabs value={value} onChange={handleChange} >
-            { tabs }
-            </Tabs>
+            <Stack direction="row" justifyContent="space-between">
+              <Tabs value={value} onChange={handleChange} >
+                { tabs }
+              </Tabs>
+                <Button sx={{height: "30px", marginTop: "auto", marginBottom: "auto", marginRight: '7.5px'}} size="small" variant="contained" onClick={ props.runHandler }>Run<PlayArrowIcon /></Button>
+            </Stack>
+            
           </Box>
           <Editor 
-              height="40vh"
+              height="45vh"
               theme="vs-dark"
               path={file.name}
               defaultLanguage={file.language}
