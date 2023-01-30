@@ -31,11 +31,13 @@ const darkTheme = createTheme({
 });
 
 function App() {
-  const [stdout, updateStdout] = useState('');
+  const [stdout, updateStdout] = useState('Python loading...\n');
   const [pythonSrc, updatePythonSrc] = useState(src.python);
   const [htmlSrc, updateHtmlSrc] = useState(src.html);
   const [cssSrc, updateCssSrc] = useState(src.css);
   const [htmlOutput, updateHtmlOutput] = useState('');
+
+  let serverRunning = false
   
   function runCode(code) {
     console.log('runCode called')
@@ -44,7 +46,11 @@ function App() {
     sippycup.postMessage({command:"run", src: pythonSrc})
   }
   
-
+  function request(method, route) {
+    if (serverRunning) {
+      sippycup.postMessage({command:"request", method:method, route:route})
+    }
+  }
   
 
   sippycup.addEventListener("message", function handleMessage(msg) {
@@ -68,10 +74,11 @@ function App() {
   
     if (msg.data.command === "stdout") {
       console.log("STDOUT: ", msg.data.message)
+      updateStdout(stdout + msg.data.message + '\n')
     }
 
     if (msg.data.command === "appReady") {
-
+      serverRunning = true
     }
   })
 
@@ -109,19 +116,19 @@ function App() {
               <Button onClick={runCode}><PlayArrowIcon />Run</Button>
             </Grid>
             <Box sx={{height:'40vh'}}>
-              <Console></Console>
+              <Console content={ stdout } initialContent={"Python loading..."}></Console>
             </Box>
           </Stack>
           
         </Grid>        
         <Grid item xs={6} height="95vh">
-          <Box sx={{padding:"15px"}}>
-            <Box sx={{background: "#222", "border-radius":"15px 15px 0 0 "}}><Tab sx={{"min-height": "40px", height: '40px', background: "#333", "border-radius":"15px 15px 0 0"}} icon={<PublicIcon />} iconPosition="start" label={"My Flask App"}></Tab></Box>
+          <Box sx={{padding:"15px", maxHeight:"100vh"}}>
+            <Box sx={{background: "#222", borderRadius:"15px 15px 0 0 "}}><Tab sx={{minHeight: "40px", height: '40px', background: "#333", borderRadius:"15px 15px 0 0"}} icon={<PublicIcon />} iconPosition="start" label={"My Flask App"}></Tab></Box>
             <Box sx={{width: "100%", background: "#333"}}>
-              <Button size="small" sx={{"min-width": 0, "margin-left":"10px", "margin-bottom":"2.5px"}}><RefreshIcon></RefreshIcon></Button>
+              <Button size="small" sx={{minWidth: 0, marginLeft:"10px", marginBottom:"2.5px"}}><RefreshIcon></RefreshIcon></Button>
               <Input sx={{ margin: "5px 0 5px 5px",
                           border: "solid 2px #4AF", 
-                          "border-radius": "50px",
+                          borderRadius: "50px",
                           padding: "0px 20px",
                           width: "80%",
                           "& .MuiInput-input": {
@@ -132,7 +139,7 @@ function App() {
                     disableUnderline
                     defaultValue="http://localhost:5000/"></Input>
             </Box>
-            <iframe css={css`border:none; height:85vh; background: white; border-radius:0px 0px 15px 15px`} title="Output" id="output" srcDoc={ htmlOutput }></iframe>
+            <iframe css={css`border:none; height:80vh; background: white; border-radius:0px 0px 15px 15px`} title="Output" id="output" srcDoc={ htmlOutput }></iframe>
           </Box>
         </Grid>
       </Grid>

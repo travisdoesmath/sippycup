@@ -39,7 +39,16 @@ export function TabbedEditor(props) {
               defaultValue={file.src}
               onChange={file.changeHandler}
               options={{
-                scrollBeyondLastLine: false
+                overviewRulerBorder: false,
+                overviewRulerLanes: 0,
+                scrollBeyondLastLine: false,
+                scrollbar: {
+                  horizontal: 'visible',
+                  vertical: 'visible'
+                },
+                minimap: {
+                  enabled: false
+                }
               }}
 
           />

@@ -9,15 +9,10 @@ min-height: 100%;
 margin:0;
 `
 
-function Console() {
-    const [content, setContent] = React.useState("");
+function Console(props) {
+    console.log(props)
 
-    const appendOutput = (output) => {
-        const currentContent = content;
-        setContent(currentContent + output);
-    }
-
-    return <Pre>console</Pre>
+    return <Pre style={{padding: "5px 15px", fontSize: "14px"}}>{ props.content }</Pre>
 
 }
 

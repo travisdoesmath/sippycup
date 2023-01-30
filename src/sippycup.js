@@ -2,57 +2,10 @@
 // eslint-disable-next-line no-undef
 importScripts("https://cdn.jsdelivr.net/pyodide//v0.21.3/full/pyodide.js");
 
-// eslint-disable-next-line no-restricted-globals
-let environ = {'HTTP_ACCEPT': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-'HTTP_ACCEPT_ENCODING': 'gzip, deflate, br',
-'HTTP_ACCEPT_LANGUAGE': 'en,en-US;q=0.9',
-'HTTP_CONNECTION': 'keep-alive',
-'HTTP_DNT': '1',
-'HTTP_HOST': 'localhost:5000',
-'HTTP_REFERER': 'http://localhost:5000/',
-'HTTP_SEC_CH_UA': '"Google Chrome";v="105"',
-'HTTP_SEC_CH_UA_MOBILE': '?0',
-'HTTP_SEC_CH_UA_PLATFORM': '"Windows"',
-'HTTP_SEC_FETCH_DEST': 'image',
-'HTTP_SEC_FETCH_MODE': 'no-cors',
-'HTTP_SEC_FETCH_SITE': 'same-origin',
-'HTTP_USER_AGENT': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ',
-'PATH_INFO': '/',
-'QUERY_STRING': '',
-'RAW_URI': '/',
-'REMOTE_ADDR': '127.0.0.1',
-'REMOTE_PORT': 55166,
-'REQUEST_METHOD': 'GET',
-'REQUEST_URI': '/',
-'SCRIPT_NAME': '',
-'SERVER_NAME': '127.0.0.1',
-'SERVER_PORT': '5000',
-'SERVER_PROTOCOL': 'HTTP/1.1',
-'SERVER_SOFTWARE': 'Werkzeug/2.2.2',
-'wsgi.multiprocess': false,
-'wsgi.multithread': true,
-'wsgi.run_once': false,
-'wsgi.url_scheme': 'http',
-'wsgi.version': (1, 0)}
-
-let pyodide, app;
-
-// let template = 
-// `<!DOCTYPE html>
-// <html lang="en">
-// <head>
-//     <meta charset="UTF-8">
-//     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-//     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-//     <title>Document</title>
-// </head>
-// <body>
-//     <h1>{{ msg }}</h1>
-// </body>
-// </html>`
+let pyodide, app, requestStatus;
 
 function start_response(status, response_headers, exc_info) {   
-    self.postMessage({'command':'stdout', 'message': `${status} ${response_headers}`})     
+    requestStatus = status
 }
 
 async function init() {
@@ -66,10 +19,6 @@ async function init() {
 
 os.mkdir('templates')
 `);
-// with open("templates/index.html", "w") as fh:
-//     fh.write("""${template}
-//     """)
-// `);
 
     await pyodide.loadPackage("micropip");
     const micropip = pyodide.pyimport("micropip");
@@ -92,10 +41,26 @@ async function main(src) {
 
     app = pyodide.globals.get("app").toJs();
 
-
+    self.postMessage({'command':'appReady'})
 }
 
 init()
+
+const logDateFormat = new Intl.DateTimeFormat('en-US', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+})
+function logDate() {
+    let now = new Date()
+    let dateParts = {}
+    logDateFormat.formatToParts(now).map(x => dateParts[x.type] = x.value)
+    return `${dateParts.day}/${dateParts.month}/${dateParts.year} ${dateParts.hour}:${dateParts.minute}:${dateParts.second}`
+}
+
 
 self.onmessage = async function(msg) {
     function getCssBlob() {
@@ -113,13 +78,19 @@ with open("templates/style.css", "r") as file:
         return css.join('')
     }
 
-    function handleRequest() {
+    function handleRequest(requestMethod="GET", route="/") {
+        const environ = {
+            'wsgi.url_scheme': 'http',
+            'REQUEST_METHOD': requestMethod,
+            'PATH_INFO': route
+        }
         let r = app(pyodide.toPy(environ), start_response).toJs()
         let response = r.__next__().toString()
         response = response.slice(2, response.length-1)
         response = response.replace(`<link rel="stylesheet" href="style.css">`, `<style>${getCss()}</style>`)
         console.log('response:', response)
         self.postMessage({'command':'response', 'data':response})    
+        self.postMessage({'command':'stdout', 'message': `127.0.0.1 - - [${logDate()}] "${requestMethod} ${route} HTTP/1.1" ${requestStatus} -\n`})
     }
 
     if (msg.data.command === "updateFile") {
@@ -129,14 +100,12 @@ with open("templates/style.css", "r") as file:
         console.log(`${filename} updated`)
     }
     if (msg.data.command === "request") {
-        // await main(msg.data.src)
-        handleRequest()
+        handleRequest(msg.data.method, msg.data.route)
     }
     if (msg.data.command === "run") {
         await main(msg.data.src)
-        self.postMessage({'command':'stdout', 'data':"* Serving Flask app 'app'"})
-        self.postMessage({'command':'stdout', 'data':" * Running on http://127.0.0.1:5000"})
+        self.postMessage({'command':'stdout', 'message':` * Serving Flask app 'app'\n * Running on http://127.0.0.1:5000`})
         self.postMessage({command:'appRunning'})
-        handleRequest()
+        handleRequest('GET', '/')
     }
 }
