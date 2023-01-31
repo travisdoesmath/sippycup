@@ -10,6 +10,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from "@mui/material/CssBaseline";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import MockBrowser from "./MockBrowser";
+import { SettingsRemoteOutlined } from "@mui/icons-material";
 
 // output window
 // import PublicIcon from '@mui/icons-material/Public';
@@ -35,11 +36,9 @@ function App() {
   const [htmlSrc, updateHtmlSrc] = useState(src.html);
   const [cssSrc, updateCssSrc] = useState(src.css);
   const [htmlOutput, updateHtmlOutput] = useState('');
-
-  let serverRunning = false
+  const [serverRunning, setServerRunning] = useState(false);
   
   function runCode(code) {
-    console.log('runCode called')
     sippycup.postMessage({command:"updateFile", filename:"index.html", content:htmlSrc})
     sippycup.postMessage({command:"updateFile", filename:"style.css", content:cssSrc})
     sippycup.postMessage({command:"run", src: pythonSrc})
@@ -54,30 +53,24 @@ function App() {
 
   sippycup.addEventListener("message", function handleMessage(msg) {
     if (msg.data.command === "ready") {
-        // let runButton = document.querySelector('#run')
-        // // runButton.innerText = "Run";
-        // // runButton.removeAttribute('disabled')
-  
-        // let codeArea = document.querySelector('#code-input')
-        
-  
-        // runButton.addEventListener('click', function(event) {
-        //     console.log('click')
-        //     console.log(codeArea.value)
-        //     sippycup.postMessage({'src':codeArea.value})
-        // })
+
     }
     if (msg.data.command === "response") {
-      updateHtmlOutput(msg.data.data.replace(/\\n/g, '\n'))
+      updateHtmlOutput(msg.data.data.replace(/\\n/g, '\n').replace(/\\'/g, "'"))
+      console.log(msg.data.status.slice(0,3))
+      if (msg.data.status.slice(0, 3) == '308') {
+        let newUrl = msg.data.headers.Location.replace('http:///', '/')
+        
+        sippycup.postMessage({command:"request", method:'GET', route:newUrl})
+      }
     }
   
     if (msg.data.command === "stdout") {
-      console.log("STDOUT: ", msg.data.message)
-      updateStdout(stdout + msg.data.message + '\n')
+      updateStdout(stdout + msg.data.message)
     }
 
     if (msg.data.command === "appReady") {
-      serverRunning = true
+      setServerRunning(true)
     }
   })
 
@@ -89,7 +82,9 @@ function App() {
         <Grid item xs={6} sx={{display:'flex', flexDirection:'column', padding: '15px'}}>
           <Stack sx={{border: 'solid 1px #444', borderRadius: '15px'}}>
             <Box>
-              <TabbedEditor runHandler = { runCode } 
+              <TabbedEditor 
+                runHandler = { runCode } 
+                isReady = { serverRunning }
                 files={[
                 {
                   name:'app.py',
@@ -115,14 +110,14 @@ function App() {
             {/* <Grid container justifyContent="flex-end">
               <Button onClick={runCode}><PlayArrowIcon />Run</Button>
             </Grid> */}
-            <Box sx={{height:'44vh', borderTop: "solid 1px #444"}}>
-              <Console content={ stdout } initialContent={"Python loading..."}></Console>
+            <Box sx={{height:'45vh', borderTop: "solid 1px #444"}}>
+              <Console content={ stdout }></Console>
             </Box>
           </Stack>
           
         </Grid>        
         <Grid item xs={6} height="95vh">
-          <MockBrowser src={ htmlOutput }></MockBrowser>
+          <MockBrowser src={ htmlOutput } requestMethod={ request }></MockBrowser>
         </Grid>
       </Grid>
     </ThemeProvider>

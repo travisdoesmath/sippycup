@@ -15,8 +15,6 @@ overflow: auto;
 `
 
 function Console(props) {
-    console.log(props)
-
     return (
         <>
             <div style={{borderRadius: '0 0 15px 15px', overflow: 'hidden', height: '100%'}}>
@@ -24,7 +22,6 @@ function Console(props) {
             </div>
         </>
     )
-
 }
 
 export default Console;

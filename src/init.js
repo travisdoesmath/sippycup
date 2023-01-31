@@ -7,7 +7,7 @@ app = Flask(__name__)
 def index():
     return render_template("index.html", msg="Hello, World!")
 
-@app.route("/api")
+@app.route("/api/")
 def api():
     return {"hello":"world"}
     

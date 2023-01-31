@@ -2,10 +2,15 @@
 // eslint-disable-next-line no-undef
 importScripts("https://cdn.jsdelivr.net/pyodide//v0.21.3/full/pyodide.js");
 
-let pyodide, app, requestStatus;
+let pyodide, app, requestStatus, headers;
 
-function start_response(status, response_headers, exc_info) {   
+function start_response(status, responseHeaders, exc_info) {   
     requestStatus = status
+    let headersObject = {}
+    console.log(responseHeaders.toJs())
+    responseHeaders.toJs().forEach(([key, value]) => headersObject[key] = value)
+    headers = headersObject
+    console.log('headers', headers)
 }
 
 async function init() {
@@ -24,15 +29,14 @@ os.mkdir('templates')
     const micropip = pyodide.pyimport("micropip");
     await micropip.install('flask')
 
-    self.postMessage({'command':'ready'})
+    self.postMessage({'command':'appReady'})
 }
 
 async function updateFile(filename, content) {
     const src=`
 with open("templates/${filename}", "w") as file:
     file.write("""${content}""")
-`        
-    console.log('src', src)
+`
     pyodide.runPython(src)
 }
 
@@ -74,7 +78,6 @@ with open("templates/style.css", "r") as file:
 `
         )
         let css = pyodide.globals.get("css").toJs();
-        console.log('css', css)
         return css.join('')
     }
 
@@ -88,8 +91,7 @@ with open("templates/style.css", "r") as file:
         let response = r.__next__().toString()
         response = response.slice(2, response.length-1)
         response = response.replace(`<link rel="stylesheet" href="style.css">`, `<style>${getCss()}</style>`)
-        console.log('response:', response)
-        self.postMessage({'command':'response', 'data':response})    
+        self.postMessage({'command':'response', 'data':response, 'headers':headers, 'status':requestStatus})    
         self.postMessage({'command':'stdout', 'message': `127.0.0.1 - - [${logDate()}] "${requestMethod} ${route} HTTP/1.1" ${requestStatus} -\n`})
     }
 
@@ -97,15 +99,14 @@ with open("templates/style.css", "r") as file:
         const filename = msg.data.filename;
         const content = msg.data.content;
         updateFile(filename, content)
-        console.log(`${filename} updated`)
     }
     if (msg.data.command === "request") {
         handleRequest(msg.data.method, msg.data.route)
     }
     if (msg.data.command === "run") {
         await main(msg.data.src)
-        self.postMessage({'command':'stdout', 'message':` * Serving Flask app 'app'\n * Running on http://127.0.0.1:5000`})
-        self.postMessage({command:'appRunning'})
+        self.postMessage({'command':'stdout', 'message':`\n * Serving Flask app 'app'\n * Running on http://127.0.0.1:5000\n`})
+        self.postMessage({command:'appReady'})
         handleRequest('GET', '/')
     }
 }
