@@ -1,4 +1,4 @@
-import { React, useState } from "react";
+import { React, useState, useEffect, useRef } from "react";
 import Box from '@mui/material/Box';
 import PublicIcon from '@mui/icons-material/Public';
 import Tab from '@mui/material/Tab';
@@ -10,6 +10,7 @@ import styled from '@emotion/styled';
 import Stack from '@mui/material/Stack';
 import InputAdornment from '@mui/material/InputAdornment';
 import { Typography } from "@mui/material";
+import { createWorkerFactory, useWorker } from "@shopify/react-web-worker";
 
 const Iframe = styled('iframe')`
 border:none; 
@@ -19,18 +20,152 @@ height: 85vh;
 width: 100%;
 `
 
+function shimify(src) {
+    const shimClass = String.raw`
+    class Shim {
+        constructor() {
+            this.pendingRequests = [];
+        }
+       
+        fetch(url) {
+            let outerResolve, outerReject;
+            let request = new Promise((resolve, reject) => {
+                outerResolve = resolve
+                outerReject = reject
+            });
+    
+            window.top.postMessage({
+                command: 'request',
+                url: url
+            }, '*')
+    
+            this.pendingRequests.push({
+                url:url, 
+                request:request,
+                outerResolve: outerResolve,
+                outerReject: outerReject
+            })
+    
+            return request
+        }
+    
+        handleMessage(msg) {
+            console.log('handleMessage called in iframe', msg, this.pendingRequests)
+    
+            let outerResolve;
+            if (msg.data.command === 'response') {
+                const translateResponse = (response) => {
+                    const decoder = new TextDecoder()
+                    console.log('shim response', response)
+                    console.log(decoder.decode(response[0].body).replace('\\n', '\n'))
+                    return {
+                        body: decoder.decode(response[0].body).replace('\\n', '\n'),
+                        headers: response[0].headers,
+                        status: response[0].status,
+                        json() {
+                            return JSON.parse(this.body)
+                        }
+                    }
+                }
+                this.pendingRequests.filter(req => req.url === msg.data.url).forEach(req => req.outerResolve(translateResponse(msg.data.response)))
+                this.pendingRequests = this.pendingRequests.filter(req => req.url !== msg.data.url)
+            }
+        }
+    }
+    
+    shim = new Shim()
+    
+    window.addEventListener("message", onMessage);
+    
+    function onMessage(e) {
+        console.log('message received in iframe: ', e)
+        switch (e.data.command) {
+            case 'response':
+                console.log('response received', e)
+                shim.handleMessage(e)
+                break;
+            default:
+        }
+    }
+    `
 
+    return src
+        .replace(/fetch\(/, 'shim.fetch(')
+        // .replace(/<script>/, `<script>window.addEventListener('ready', () => {`)
+        // .replace(/<\/script>/, `}, false);</script>`)
+        .replace(/<\/body>/, '<script>' + shimClass + '</script></body>')
+}
+
+
+function CustomIframe(props) {
+    const windowRef = useRef(null);
+
+    useEffect(() => {
+        console.log('useEffect called on iframe')
+        if (windowRef?.current?.contentWindow) {
+            
+            const iframeWindow = windowRef.current.contentWindow
+            console.log(iframeWindow)
+            const handler = (msg) => {
+                switch (msg.data.command) {
+                    case "request":
+                        console.log('request received', msg)
+                        props.request(msg.data.method, msg.data.url).then(response => {
+                            iframeWindow.postMessage({
+                                command: 'response',
+                                url: msg.data.url,
+                                response: response
+                            })    
+                        })
+                        break;
+                    default:
+                }
+            }
+    
+            window.addEventListener("message", handler)
+
+            return () => {
+                window.removeEventListener("message", handler)
+            }        
+        }
+    })
+
+    return <Iframe title="Output" id="output" sandbox="allow-same-origin allow-scripts" srcDoc={props.srcDoc} ref={windowRef}></Iframe>
+}
 
 export default function MockBrowser(props) {
     const [url, setUrl] = useState('')
+    const windowRef = useRef(null);
+
+        
     let title = 'localhost'
     if (props.src && props.src.match(/(?:<title>)(.*)(?:<\/title>)/)) {
         title = props.src.match(/(?:<title>)(.*)(?:<\/title>)/)[1]
     }
 
-    function requestPage(event) {
+    // useEffect(() => {
+    //     const iframe = document.querySelector('iframe');
+
+    //     iframe.addEventListener('load', () => {
+    //         iframe.contentWindow.postMessage({
+    //             command: "connect",
+    //         }, '*', [props.channel.port2])
+    //     })
+    // })
+
+    async function requestPage(event) {
         event.preventDefault()
-        props.requestMethod('GET', '/' + url)
+        props.pageRequestMethod('GET', '/' + url)
+    }
+
+    async function request(method, url) {
+        return props.requestMethod(method, url)
+    }
+
+    
+
+    function shimRequest() {
+
     }
 
     return (
@@ -81,7 +216,9 @@ export default function MockBrowser(props) {
                         ></Input>
               </form>
             </Box>
-            <Iframe title="Output" id="output" sandbox="allow-scripts" srcDoc={ props.src }></Iframe>
+            {/* <Iframe title="Output" id="output" sandbox="allow-scripts" srcDoc={ shimify(props.src) } ref={windowRef}></Iframe> */}
+            <CustomIframe title="Output" id="output" srcDoc={shimify(props.src)} request={request}></CustomIframe>
+            {/* <Iframe title="Output" id="output" sandbox="allow-scripts allow-same-origin" src={URL.createObjectURL(new Blob([shimify(props.src)], {type:"text/html"}))} ref={windowRef}></Iframe> */}
           </Box>
           </>
     )

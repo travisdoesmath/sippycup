@@ -1,5 +1,5 @@
 /** @jsxImportSource @emotion/react */
-import { React, useState } from "react";
+import { React, useState, useEffect } from "react";
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
@@ -10,7 +10,8 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from "@mui/material/CssBaseline";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import MockBrowser from "./MockBrowser";
-import { SettingsRemoteOutlined } from "@mui/icons-material";
+import { Message, SettingsRemoteOutlined } from "@mui/icons-material";
+import { createWorkerFactory, useWorker } from "@shopify/react-web-worker";
 
 // output window
 // import PublicIcon from '@mui/icons-material/Public';
@@ -21,7 +22,9 @@ import { SettingsRemoteOutlined } from "@mui/icons-material";
 // import RefreshIcon from '@mui/icons-material/Refresh';
 
 
-const sippycup = new Worker(new URL('./sippycup.js', import.meta.url));
+//const sippycup = new Worker(new URL('./sippycup.js', import.meta.url));
+
+const createWorker = createWorkerFactory(() => import('./sippycup.js'));
 
 
 const darkTheme = createTheme({
@@ -31,6 +34,7 @@ const darkTheme = createTheme({
 });
 
 function App() {
+  const sippycup = useWorker(createWorker);
   const [stdout, updateStdout] = useState('Python loading...\n');
   const [pythonSrc, updatePythonSrc] = useState(src.python);
   const [htmlSrc, updateHtmlSrc] = useState(src.html);
@@ -38,41 +42,90 @@ function App() {
   const [htmlOutput, updateHtmlOutput] = useState('');
   const [serverRunning, setServerRunning] = useState(false);
   
-  function runCode(code) {
-    sippycup.postMessage({command:"updateFile", filename:"index.html", content:htmlSrc})
-    sippycup.postMessage({command:"updateFile", filename:"style.css", content:cssSrc})
-    sippycup.postMessage({command:"run", src: pythonSrc})
+  async function runCode() {
+    // sippycup.postMessage({command:"updateFile", filename:"index.html", content:htmlSrc})
+    // sippycup.postMessage({command:"updateFile", filename:"style.css", content:cssSrc})
+    // sippycup.postMessage({command:"run", src: pythonSrc})
+    let _output = ''
+    sippycup.updateFile('index.html', htmlSrc)
+      .then(() => sippycup.updateFile('style.css', cssSrc))
+      .then(() => sippycup.run(pythonSrc))
+      .then((output) => _output += output)
+      .then(() => request('GET', '/'))
+      .then(([response, output]) => {
+        const textDecoder = new TextDecoder()
+        console.log(response)
+        console.log(textDecoder.decode(response.body))
+        updateHtmlOutput(textDecoder.decode(response.body).replace(/\\n/g, '\n').replace(/\\'/g, "'"))
+        _output += output
+      })
+      .then(() => updateStdout(stdout + _output))
   }
   
-  function request(method, route) {
-    if (serverRunning) {
-      sippycup.postMessage({command:"request", method:method, route:route})
+  async function request(method, route) {
+    // if (serverRunning) {
+    //   sippycup.postMessage({command:"request", method:method, route:route})
+    // }
+    let response = await sippycup.request(method, route)
+    console.log('app.js response', response)
+    let stdout = response.stdout;
+    response = response.value
+
+    if (response.status.slice(0, 3) == '308') {
+      let newUrl = response.headers.Location.replace('http:///', '/')
+      
+      return request('GET', newUrl)
     }
+
+    return [response, stdout];
   }
-  
 
-  sippycup.addEventListener("message", function handleMessage(msg) {
-    if (msg.data.command === "ready") {
+  async function requestAndUpdate(method, route) {
+    let _output = ''
+    request(method, route)
+    .then(([response, output]) => {
+      const decoder = new TextDecoder()
+      updateHtmlOutput(decoder.decode(response.data))
+      //.replace(/\\n/g, '\n').replace(/\\'/g, "'"))
+      _output += output
+    })
+    .then(() => updateStdout(stdout + _output))
+  }
 
-    }
-    if (msg.data.command === "response") {
-      updateHtmlOutput(msg.data.data.replace(/\\n/g, '\n').replace(/\\'/g, "'"))
-      console.log(msg.data.status.slice(0,3))
-      if (msg.data.status.slice(0, 3) == '308') {
-        let newUrl = msg.data.headers.Location.replace('http:///', '/')
+  useEffect(() => {
+    (async () => {
+      sippycup.start().then(res => {
+        updateStdout(stdout + res)
+        setServerRunning(true)
+      })
+    })();
+  }, [sippycup])
+  // const channel = new MessageChannel()
+
+  // sippycup.postMessage({command:"connect"}, [channel.port1])
+
+  // sippycup.addEventListener("message", function handleMessage(msg) {
+  //   if (msg.data.command === "ready") {
+
+  //   }
+  //   if (msg.data.command === "response") {
+  //     updateHtmlOutput(msg.data.data.replace(/\\n/g, '\n').replace(/\\'/g, "'"))
+  //     console.log(msg.data.status.slice(0,3))
+  //     if (msg.data.status.slice(0, 3) == '308') {
+  //       let newUrl = msg.data.headers.Location.replace('http:///', '/')
         
-        sippycup.postMessage({command:"request", method:'GET', route:newUrl})
-      }
-    }
+  //       request('GET', newUrl)
+  //     }
+  //   }
   
-    if (msg.data.command === "stdout") {
-      updateStdout(stdout + msg.data.message)
-    }
+  //   if (msg.data.command === "stdout") {
+  //     updateStdout(stdout + msg.data.message)
+  //   }
 
-    if (msg.data.command === "appReady") {
-      setServerRunning(true)
-    }
-  })
+  //   if (msg.data.command === "appReady") {
+  //     setServerRunning(true)
+  //   }
+  // })
 
 
   return (
@@ -83,7 +136,7 @@ function App() {
           <Stack sx={{border: 'solid 1px #444', borderRadius: '15px'}}>
             <Box>
               <TabbedEditor 
-                runHandler = { runCode } 
+                runHandler = { runCode }
                 isReady = { serverRunning }
                 files={[
                 {
@@ -117,7 +170,7 @@ function App() {
           
         </Grid>        
         <Grid item xs={6} height="95vh">
-          <MockBrowser src={ htmlOutput } requestMethod={ request }></MockBrowser>
+          <MockBrowser src={ htmlOutput } pageRequestMethod={ requestAndUpdate } requestMethod={ request } ></MockBrowser>
         </Grid>
       </Grid>
     </ThemeProvider>

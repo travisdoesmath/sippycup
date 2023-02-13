@@ -1,43 +1,66 @@
 /* eslint-disable no-restricted-globals */
-// eslint-disable-next-line no-undef
-importScripts("https://cdn.jsdelivr.net/pyodide//v0.21.3/full/pyodide.js");
+let pyodide;
+let app, requestStatus, headers;
 
-let pyodide, app, requestStatus, headers;
-
-function start_response(status, responseHeaders, exc_info) {   
-    requestStatus = status
-    let headersObject = {}
-    console.log(responseHeaders.toJs())
-    responseHeaders.toJs().forEach(([key, value]) => headersObject[key] = value)
-    headers = headersObject
-    console.log('headers', headers)
-}
-
-async function init() {
+if ('function' === typeof(importScripts)) {
     // eslint-disable-next-line no-undef
-    pyodide = await loadPyodide({ stdout: (output) => {
-        self.postMessage({'command':'stdout', 'message':output})
-    }});
-
-    pyodide.runPython(
-`import os
-
-os.mkdir('templates')
-`);
-
-    await pyodide.loadPackage("micropip");
-    const micropip = pyodide.pyimport("micropip");
-    await micropip.install('flask')
-
-    self.postMessage({'command':'appReady'})
+    importScripts("https://cdn.jsdelivr.net/pyodide//v0.21.3/full/pyodide.js");
 }
 
-async function updateFile(filename, content) {
-    const src=`
-with open("templates/${filename}", "w") as file:
-    file.write("""${content}""")
+function getCss() {
+    pyodide.runPython(`
+with open("templates/style.css", "r") as file:
+    css = file.readlines()    
 `
-    pyodide.runPython(src)
+    )
+    let css = pyodide.globals.get("css").toJs();
+    return css.join('')
+}
+
+function handleRequest(requestMethod="GET", route="/", target=self) {
+    const environ = {
+        'wsgi.url_scheme': 'http',
+        'REQUEST_METHOD': requestMethod,
+        'PATH_INFO': route
+    }
+    let r = app(pyodide.toPy(environ), start_response).toJs()
+    let response = r.__next__()
+    console.log('response before converting to string', response)
+    response = response.toString()
+    response = response.slice(2, response.length-1)
+    response = response.replace(`<link rel="stylesheet" href="style.css">`, `<style>${getCss()}</style>`)
+    // target.postMessage({'command':'response', 'data':response, 'headers':headers, 'status':requestStatus})    
+    // target.postMessage({'command':'stdout', 'message': `127.0.0.1 - - [${logDate()}] "${requestMethod} ${route} HTTP/1.1" ${requestStatus} -\n`})
+    const textEncoder = new TextEncoder();
+    console.log(response)
+    console.log('sippycup response: ', textEncoder.encode(response))
+    return {
+        value:
+        {
+            body: textEncoder.encode(response),
+            headers: headers,
+            status: requestStatus
+        },
+        stdout:  `127.0.0.1 - - [${logDate()}] "${requestMethod} ${route} HTTP/1.1" ${requestStatus} -\n`
+    }
+}
+
+
+
+function logDate() {
+    const logDateFormat = new Intl.DateTimeFormat('en-US', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    })
+
+    let now = new Date()
+    let dateParts = {}
+    logDateFormat.formatToParts(now).map(x => dateParts[x.type] = x.value)
+    return `${dateParts.day}/${dateParts.month}/${dateParts.year} ${dateParts.hour}:${dateParts.minute}:${dateParts.second}`
 }
 
 async function main(src) {
@@ -48,65 +71,55 @@ async function main(src) {
     self.postMessage({'command':'appReady'})
 }
 
-init()
-
-const logDateFormat = new Intl.DateTimeFormat('en-US', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-})
-function logDate() {
-    let now = new Date()
-    let dateParts = {}
-    logDateFormat.formatToParts(now).map(x => dateParts[x.type] = x.value)
-    return `${dateParts.day}/${dateParts.month}/${dateParts.year} ${dateParts.hour}:${dateParts.minute}:${dateParts.second}`
+function start_response(status, responseHeaders, exc_info) {   
+    requestStatus = status
+    let headersObject = {}
+    responseHeaders.toJs().forEach(([key, value]) => headersObject[key] = value)
+    headers = headersObject
 }
 
+export async function request(method, route) {
+    return handleRequest(method, route)
+}
 
-self.onmessage = async function(msg) {
-    function getCssBlob() {
-        return new Blob(getCss())
-    }
+export async function run(src) {
+    await main(src)
+        let stdout = `\n * Serving Flask app 'app'\n * Running on http://127.0.0.1:5000\n`
+        // self.postMessage({'command':'stdout', 'message':`\n * Serving Flask app 'app'\n * Running on http://127.0.0.1:5000\n`})
+        // self.postMessage({command:'appReady'})
+        // let response = handleRequest('GET', '/')
+        return stdout
+}
 
-    function getCss() {
-        pyodide.runPython(`
-with open("templates/style.css", "r") as file:
-    css = file.readlines()    
+export async function start() {
+    let output
+    // eslint-disable-next-line no-undef
+    pyodide = await loadPyodide({ stdout: (_output) => {
+        output = _output
+        // self.postMessage({'command':'stdout', 'message':output})
+    }});
+
+    pyodide.runPython(
+`import os
+
+os.mkdir('templates')
+`);
+        
+    await pyodide.loadPackage("micropip")
+        .then(() => pyodide.pyimport("micropip"))
+        .then(micropip => micropip.install('flask'));
+
+    // self.postMessage({'command':'appReady'})
+    return output
+}
+
+export async function updateFile(filename, content) {
+    const src=`
+with open("templates/${filename}", "w") as file:
+    file.write("""${content}""")
 `
-        )
-        let css = pyodide.globals.get("css").toJs();
-        return css.join('')
-    }
-
-    function handleRequest(requestMethod="GET", route="/") {
-        const environ = {
-            'wsgi.url_scheme': 'http',
-            'REQUEST_METHOD': requestMethod,
-            'PATH_INFO': route
-        }
-        let r = app(pyodide.toPy(environ), start_response).toJs()
-        let response = r.__next__().toString()
-        response = response.slice(2, response.length-1)
-        response = response.replace(`<link rel="stylesheet" href="style.css">`, `<style>${getCss()}</style>`)
-        self.postMessage({'command':'response', 'data':response, 'headers':headers, 'status':requestStatus})    
-        self.postMessage({'command':'stdout', 'message': `127.0.0.1 - - [${logDate()}] "${requestMethod} ${route} HTTP/1.1" ${requestStatus} -\n`})
-    }
-
-    if (msg.data.command === "updateFile") {
-        const filename = msg.data.filename;
-        const content = msg.data.content;
-        updateFile(filename, content)
-    }
-    if (msg.data.command === "request") {
-        handleRequest(msg.data.method, msg.data.route)
-    }
-    if (msg.data.command === "run") {
-        await main(msg.data.src)
-        self.postMessage({'command':'stdout', 'message':`\n * Serving Flask app 'app'\n * Running on http://127.0.0.1:5000\n`})
-        self.postMessage({command:'appReady'})
-        handleRequest('GET', '/')
-    }
+    pyodide.runPython(src)
 }
+
+
+

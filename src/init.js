@@ -1,5 +1,6 @@
 const src = {
     python: `from flask import Flask, render_template
+import random
 
 app = Flask(__name__)
 
@@ -9,27 +10,36 @@ def index():
 
 @app.route("/api/")
 def api():
-    return {"hello":"world"}
-    
+    return {'value':random.random()}
 `,
 
     html: `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>My Fullstack App</title>
-</head>
-<body>
-    <h1>{{ msg }}</h1>
-</body>
-</html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="style.css">
+        <title>My Fullstack App</title>
+    </head>
+    <body>
+        <h1>{{ msg }}</h1>
+        <button>Get Random Number</button>
+        <p></p>
+
+        <script>
+            const button = document.querySelector('button')
+            button.addEventListener('click', (e) => {
+                fetch('/api/').then(res => res.json())
+                .then(data => p.textContent = data.value)
+            })
+        </script>
+    </body>
+    </html>    
+  
 `,
 
     css: `body, html {
-    margin: 0;
     height: 100%;
     width: 100%;
 }`
