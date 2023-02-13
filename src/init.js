@@ -29,6 +29,7 @@ def api():
 
         <script>
             const button = document.querySelector('button')
+            const p = document.querySelector('p')
             button.addEventListener('click', (e) => {
                 fetch('/api/').then(res => res.json())
                 .then(data => p.textContent = data.value)

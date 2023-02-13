@@ -68,7 +68,7 @@ function App() {
     // }
     let response = await sippycup.request(method, route)
     console.log('app.js response', response)
-    let stdout = response.stdout;
+    let _stdout = response.stdout;
     response = response.value
 
     if (response.status.slice(0, 3) == '308') {
@@ -77,7 +77,9 @@ function App() {
       return request('GET', newUrl)
     }
 
-    return [response, stdout];
+    updateStdout(stdout + _stdout)
+
+    return [response, _stdout];
   }
 
   async function requestAndUpdate(method, route) {
@@ -85,8 +87,7 @@ function App() {
     request(method, route)
     .then(([response, output]) => {
       const decoder = new TextDecoder()
-      updateHtmlOutput(decoder.decode(response.data))
-      //.replace(/\\n/g, '\n').replace(/\\'/g, "'"))
+      updateHtmlOutput(decoder.decode(response.body).replace(/\\n/g, '\n').replace(/\\'/g, "'"))
       _output += output
     })
     .then(() => updateStdout(stdout + _output))
