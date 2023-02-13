@@ -13,6 +13,7 @@ import { createWorkerFactory, useWorker } from "@shopify/react-web-worker";
 
 const createWorker = createWorkerFactory(() => import('./sippycup.js'));
 
+const paddingValue = 15
 
 const darkTheme = createTheme({
   palette: {
@@ -84,7 +85,7 @@ function App() {
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <Grid container height="100vh">
-        <Grid item xs={6} sx={{display:'flex', flexDirection:'column', padding: '15px 0 15px 15px', height: '100vh'}}>
+        <Grid item xs={12} md={6} sx={{display:'flex', flexDirection:'column', padding: `${paddingValue}px ${paddingValue/2}px ${paddingValue}px ${paddingValue}px`, height: '100vh'}}>
           <Stack sx={{border: 'solid 1px #444', borderRadius: '15px', maxHeight: '100%'}}>
             <Box>
               <TabbedEditor 
@@ -118,7 +119,7 @@ function App() {
           </Stack>
           
         </Grid>        
-        <Grid item xs={6} sx={{display:'flex', flexDirection:'column', padding: '15px', height: '100vh'}}>
+        <Grid item xs={12} md={6} sx={{display:'flex', flexDirection:'column', padding: `${paddingValue}px ${paddingValue}px ${paddingValue}px ${paddingValue/2}px`, height: '100vh'}}>
           <MockBrowser src={ htmlOutput } pageRequestMethod={ requestAndUpdate } requestMethod={ request } ></MockBrowser>
         </Grid>
       </Grid>

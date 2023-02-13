@@ -165,7 +165,7 @@ export default function MockBrowser(props) {
                             border: "solid 2px #4AF", 
                             borderRadius: "50px",
                             padding: "0px 20px",
-                            width: "90%",
+                            width: "85%",
                             "& .MuiInput-input": {
                                 padding: "4px 0",
                                 fontSize: '15px',
