@@ -8,21 +8,8 @@ import Console from "./Console";
 import { src } from './init';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from "@mui/material/CssBaseline";
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import MockBrowser from "./MockBrowser";
-import { Message, SettingsRemoteOutlined } from "@mui/icons-material";
 import { createWorkerFactory, useWorker } from "@shopify/react-web-worker";
-
-// output window
-// import PublicIcon from '@mui/icons-material/Public';
-// import Tab from '@mui/material/Tab';
-// import Typography from "@mui/material/Typography";
-// import TextField from '@mui/material/TextField';
-// import Input from '@mui/material/Input';
-// import RefreshIcon from '@mui/icons-material/Refresh';
-
-
-//const sippycup = new Worker(new URL('./sippycup.js', import.meta.url));
 
 const createWorker = createWorkerFactory(() => import('./sippycup.js'));
 
@@ -43,9 +30,6 @@ function App() {
   const [serverRunning, setServerRunning] = useState(false);
   
   async function runCode() {
-    // sippycup.postMessage({command:"updateFile", filename:"index.html", content:htmlSrc})
-    // sippycup.postMessage({command:"updateFile", filename:"style.css", content:cssSrc})
-    // sippycup.postMessage({command:"run", src: pythonSrc})
     let _output = ''
     sippycup.updateFile('index.html', htmlSrc)
       .then(() => sippycup.updateFile('style.css', cssSrc))
@@ -54,8 +38,6 @@ function App() {
       .then(() => request('GET', '/'))
       .then(([response, output]) => {
         const textDecoder = new TextDecoder()
-        console.log(response)
-        console.log(textDecoder.decode(response.body))
         updateHtmlOutput(textDecoder.decode(response.body).replace(/\\n/g, '\n').replace(/\\'/g, "'"))
         _output += output
       })
@@ -63,15 +45,11 @@ function App() {
   }
   
   async function request(method, route) {
-    // if (serverRunning) {
-    //   sippycup.postMessage({command:"request", method:method, route:route})
-    // }
     let response = await sippycup.request(method, route)
-    console.log('app.js response', response)
     let _stdout = response.stdout;
     response = response.value
 
-    if (response.status.slice(0, 3) == '308') {
+    if (response.status.slice(0, 3) === '308') {
       let newUrl = response.headers.Location.replace('http:///', '/')
       
       return request('GET', newUrl)
@@ -96,38 +74,11 @@ function App() {
   useEffect(() => {
     (async () => {
       sippycup.start().then(res => {
-        updateStdout(stdout + res)
+        updateStdout( stdout + res)
         setServerRunning(true)
       })
     })();
   }, [sippycup])
-  // const channel = new MessageChannel()
-
-  // sippycup.postMessage({command:"connect"}, [channel.port1])
-
-  // sippycup.addEventListener("message", function handleMessage(msg) {
-  //   if (msg.data.command === "ready") {
-
-  //   }
-  //   if (msg.data.command === "response") {
-  //     updateHtmlOutput(msg.data.data.replace(/\\n/g, '\n').replace(/\\'/g, "'"))
-  //     console.log(msg.data.status.slice(0,3))
-  //     if (msg.data.status.slice(0, 3) == '308') {
-  //       let newUrl = msg.data.headers.Location.replace('http:///', '/')
-        
-  //       request('GET', newUrl)
-  //     }
-  //   }
-  
-  //   if (msg.data.command === "stdout") {
-  //     updateStdout(stdout + msg.data.message)
-  //   }
-
-  //   if (msg.data.command === "appReady") {
-  //     setServerRunning(true)
-  //   }
-  // })
-
 
   return (
     <ThemeProvider theme={darkTheme}>
@@ -161,9 +112,6 @@ function App() {
                 
               ]}/>
             </Box>
-            {/* <Grid container justifyContent="flex-end">
-              <Button onClick={runCode}><PlayArrowIcon />Run</Button>
-            </Grid> */}
             <Box sx={{height:'45vh', borderTop: "solid 1px #444"}}>
               <Console content={ stdout }></Console>
             </Box>

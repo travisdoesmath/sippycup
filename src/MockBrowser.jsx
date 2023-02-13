@@ -5,12 +5,10 @@ import Tab from '@mui/material/Tab';
 import Input from '@mui/material/Input';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import Button from '@mui/material/Button';
-// import { css } from '@emotion/react'
 import styled from '@emotion/styled';
 import Stack from '@mui/material/Stack';
 import InputAdornment from '@mui/material/InputAdornment';
 import { Typography } from "@mui/material";
-import { createWorkerFactory, useWorker } from "@shopify/react-web-worker";
 
 const tabBarHeight = 50
 const urlBarHeight = 45
@@ -53,14 +51,10 @@ function shimify(src) {
         }
     
         handleMessage(msg) {
-            console.log('handleMessage called in iframe', msg, this.pendingRequests)
-    
             let outerResolve;
             if (msg.data.command === 'response') {
                 const translateResponse = (response) => {
                     const decoder = new TextDecoder()
-                    console.log('shim response', response)
-                    console.log(decoder.decode(response[0].body).replace('\\n', '\n'))
                     return {
                         body: decoder.decode(response[0].body).replace('\\n', '\n'),
                         headers: response[0].headers,
@@ -81,10 +75,8 @@ function shimify(src) {
     window.addEventListener("message", onMessage);
     
     function onMessage(e) {
-        console.log('message received in iframe: ', e)
         switch (e.data.command) {
             case 'response':
-                console.log('response received', e)
                 shim.handleMessage(e)
                 break;
             default:
@@ -104,15 +96,12 @@ function CustomIframe(props) {
     const windowRef = useRef(null);
 
     useEffect(() => {
-        console.log('useEffect called on iframe')
         if (windowRef?.current?.contentWindow) {
             
             const iframeWindow = windowRef.current.contentWindow
-            console.log(iframeWindow)
             const handler = (msg) => {
                 switch (msg.data.command) {
                     case "request":
-                        console.log('request received', msg)
                         props.request(msg.data.method, msg.data.url).then(response => {
                             iframeWindow.postMessage({
                                 command: 'response',
@@ -138,23 +127,11 @@ function CustomIframe(props) {
 
 export default function MockBrowser(props) {
     const [url, setUrl] = useState('')
-    const windowRef = useRef(null);
-
         
     let title = 'localhost'
     if (props.src && props.src.match(/(?:<title>)(.*)(?:<\/title>)/)) {
         title = props.src.match(/(?:<title>)(.*)(?:<\/title>)/)[1]
     }
-
-    // useEffect(() => {
-    //     const iframe = document.querySelector('iframe');
-
-    //     iframe.addEventListener('load', () => {
-    //         iframe.contentWindow.postMessage({
-    //             command: "connect",
-    //         }, '*', [props.channel.port2])
-    //     })
-    // })
 
     async function requestPage(event) {
         event.preventDefault()
@@ -165,17 +142,9 @@ export default function MockBrowser(props) {
         return props.requestMethod(method, url)
     }
 
-    
-
-    function shimRequest() {
-
-    }
-
     return (
         <>
         <Box sx={{maxHeight:"100%", height:"100%"}}>
-            
-            {/* <Box sx={{background: "#202124", borderRadius:"15px 15px 0 0 "}}> */}
             <Box>
                 <Stack alignItems='flex-end' sx={{background: '#202124', minHeight: '50px', borderRadius: '15px 15px 0 0'}} direction="row">
                     <svg style={{width:'60px', height:'50px'}}>
@@ -219,9 +188,7 @@ export default function MockBrowser(props) {
                         ></Input>
               </form>
             </Box>
-            {/* <Iframe title="Output" id="output" sandbox="allow-scripts" srcDoc={ shimify(props.src) } ref={windowRef}></Iframe> */}
             <CustomIframe title="Output" id="output" srcDoc={shimify(props.src)} request={request}></CustomIframe>
-            {/* <Iframe title="Output" id="output" sandbox="allow-scripts allow-same-origin" src={URL.createObjectURL(new Blob([shimify(props.src)], {type:"text/html"}))} ref={windowRef}></Iframe> */}
           </Box>
           </>
     )
