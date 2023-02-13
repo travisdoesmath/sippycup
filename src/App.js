@@ -74,7 +74,7 @@ function App() {
   useEffect(() => {
     (async () => {
       sippycup.start().then(res => {
-        updateStdout( stdout + res)
+        updateStdout(s => s + res)
         setServerRunning(true)
       })
     })();

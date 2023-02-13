@@ -86,8 +86,6 @@ function shimify(src) {
 
     return src
         .replace(/fetch\(/, 'shim.fetch(')
-        // .replace(/<script>/, `<script>window.addEventListener('ready', () => {`)
-        // .replace(/<\/script>/, `}, false);</script>`)
         .replace(/<\/body>/, '<script>' + shimClass + '</script></body>')
 }
 

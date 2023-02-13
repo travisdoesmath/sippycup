@@ -29,8 +29,6 @@ function handleRequest(requestMethod="GET", route="/", target=self) {
     response = response.toString()
     response = response.slice(2, response.length-1)
     response = response.replace(`<link rel="stylesheet" href="style.css">`, `<style>${getCss()}</style>`)
-    // target.postMessage({'command':'response', 'data':response, 'headers':headers, 'status':requestStatus})    
-    // target.postMessage({'command':'stdout', 'message': `127.0.0.1 - - [${logDate()}] "${requestMethod} ${route} HTTP/1.1" ${requestStatus} -\n`})
     const textEncoder = new TextEncoder();
     console.log(response)
     console.log('sippycup response: ', textEncoder.encode(response))
@@ -85,9 +83,6 @@ export async function request(method, route) {
 export async function run(src) {
     await main(src)
         let stdout = `\n * Serving Flask app 'app'\n * Running on http://127.0.0.1:5000\n`
-        // self.postMessage({'command':'stdout', 'message':`\n * Serving Flask app 'app'\n * Running on http://127.0.0.1:5000\n`})
-        // self.postMessage({command:'appReady'})
-        // let response = handleRequest('GET', '/')
         return stdout
 }
 
@@ -96,7 +91,6 @@ export async function start() {
     // eslint-disable-next-line no-undef
     pyodide = await loadPyodide({ stdout: (_output) => {
         output = _output
-        // self.postMessage({'command':'stdout', 'message':output})
     }});
 
     pyodide.runPython(
@@ -109,7 +103,6 @@ os.mkdir('templates')
         .then(() => pyodide.pyimport("micropip"))
         .then(micropip => micropip.install('flask'));
 
-    // self.postMessage({'command':'appReady'})
     return output
 }
 
