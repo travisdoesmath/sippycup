@@ -12,11 +12,14 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { Typography } from "@mui/material";
 import { createWorkerFactory, useWorker } from "@shopify/react-web-worker";
 
+const tabBarHeight = 50
+const urlBarHeight = 45
+
 const Iframe = styled('iframe')`
 border:none; 
 background: white; 
 border-radius:0px 0px 15px 15px;
-height: 85vh;
+height: calc(100% - ${tabBarHeight + urlBarHeight}px);
 width: 100%;
 `
 
@@ -170,7 +173,7 @@ export default function MockBrowser(props) {
 
     return (
         <>
-        <Box sx={{padding:"15px", maxHeight:"100vh", height:"100vh"}}>
+        <Box sx={{maxHeight:"100%", height:"100%"}}>
             
             {/* <Box sx={{background: "#202124", borderRadius:"15px 15px 0 0 "}}> */}
             <Box>
@@ -178,17 +181,17 @@ export default function MockBrowser(props) {
                     <svg style={{width:'60px', height:'50px'}}>
                         <circle cx={25} cy={25} r={7.5} fill='rgb(56, 202, 75)'></circle>
                     </svg>
-                    <div style={{background: '#35363a', height: '50px', width: '10px', borderRadius: '15px 0 0 0'}}>
+                    <div style={{background: '#35363a', height: `${tabBarHeight}px`, width: '10px', borderRadius: '15px 0 0 0'}}>
                         <div style={{height: '100%', width: '10px', background: '#202124', borderRadius: '15px 0 10px 0'}}></div>
                     </div>
-                    <Tab sx={{textTransform: 'none', minHeight: "40px", height: '40px', background: "#35363a", color:"#DDD", opacity:1, borderRadius:"15px 15px 0 0"}} icon={<PublicIcon fontSize="small" />} iconPosition="start" label={ title }></Tab>
-                    <div style={{background: '#35363a', height: '50px', width: '10px'}}>
+                    <Tab sx={{textTransform: 'none', minHeight: "0px", background: "#35363a", color:"#DDD", opacity:1, borderRadius:"15px 15px 0 0"}} icon={<PublicIcon fontSize="small" />} iconPosition="start" label={ title }></Tab>
+                    <div style={{background: '#35363a', height: `${tabBarHeight}px`, width: '10px'}}>
                         <div style={{height: '100%', width: '10px', background: '#202124', borderRadius: '0 0 0 10px'}}></div>
                     </div>
                 </Stack>
                 
             </Box>
-            <Box sx={{width: "100%", background: "#35363a"}}>
+            <Box sx={{width: "100%", background: "#35363a", height: `${urlBarHeight}px`}}>
               <form onSubmit={requestPage}>
                 <Button size="small" sx={{ minWidth: 0, marginLeft:"10px", marginBottom:"2.5px"}} onClick={requestPage}><RefreshIcon></RefreshIcon></Button>
                 <Input sx={{ margin: "5px 0 5px 5px",

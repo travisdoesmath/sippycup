@@ -133,8 +133,8 @@ function App() {
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <Grid container height="100vh">
-        <Grid item xs={6} sx={{display:'flex', flexDirection:'column', padding: '15px'}}>
-          <Stack sx={{border: 'solid 1px #444', borderRadius: '15px'}}>
+        <Grid item xs={6} sx={{display:'flex', flexDirection:'column', padding: '15px 0 15px 15px', height: '100vh'}}>
+          <Stack sx={{border: 'solid 1px #444', borderRadius: '15px', maxHeight: '100%'}}>
             <Box>
               <TabbedEditor 
                 runHandler = { runCode }
@@ -170,7 +170,7 @@ function App() {
           </Stack>
           
         </Grid>        
-        <Grid item xs={6} height="95vh">
+        <Grid item xs={6} sx={{display:'flex', flexDirection:'column', padding: '15px', height: '100vh'}}>
           <MockBrowser src={ htmlOutput } pageRequestMethod={ requestAndUpdate } requestMethod={ request } ></MockBrowser>
         </Grid>
       </Grid>
