@@ -5,11 +5,16 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import TabbedEditor from "./TabbedEditor";
 import Console from "./Console";
-import { src } from './init';
+
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from "@mui/material/CssBaseline";
 import MockBrowser from "./MockBrowser";
 import { createWorkerFactory, useWorker } from "@shopify/react-web-worker";
+import IconButton from "@mui/material/IconButton";
+import { Typography } from "@mui/material";
+import SaveIcon from '@mui/icons-material/Save';
+
+const baseUrl = "http://localhost:5050"
 
 const createWorker = createWorkerFactory(() => import('./sippycup.js'));
 
@@ -21,15 +26,20 @@ const darkTheme = createTheme({
   },
 });
 
-function App() {
+function App(props) {
+
+  console.log(props.src)
   const sippycup = useWorker(createWorker);
+  const [projectName, updateProjectName] = useState(props.projectName)
   const [stdout, updateStdout] = useState('Python loading...\n');
-  const [pythonSrc, updatePythonSrc] = useState(src.python);
-  const [htmlSrc, updateHtmlSrc] = useState(src.html);
-  const [cssSrc, updateCssSrc] = useState(src.css);
+  const [pythonSrc, updatePythonSrc] = useState(props.src.python);
+  const [htmlSrc, updateHtmlSrc] = useState(props.src.html);
+  const [cssSrc, updateCssSrc] = useState(props.src.css);
   const [htmlOutput, updateHtmlOutput] = useState('');
   const [serverRunning, setServerRunning] = useState(false);
   
+  
+
   async function runCode() {
     let _output = ''
     sippycup.updateFile('index.html', htmlSrc)
@@ -81,11 +91,41 @@ function App() {
     })();
   }, [sippycup])
 
+  async function save() {
+    fetch(`${baseUrl}/api/save`, {
+      method: 'POST',
+      body: JSON.stringify({
+        'index.html': htmlSrc,
+        'app.py': pythonSrc,
+        'style.css': cssSrc
+      })
+    }).then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        updateProjectName(data.id)
+        window.history.pushState({},'',data.id)
+      }
+    })
+  }
+
+
+
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <Grid container height="100vh">
-        <Grid item xs={12} md={6} sx={{display:'flex', flexDirection:'column', padding: `${paddingValue}px ${paddingValue/2}px ${paddingValue}px ${paddingValue}px`, height: '100vh'}}>
+        <Grid item xs={12}>
+          <Box>
+          
+            <Stack direction="row" sx={{height: '35px'}}>
+              <Box sx={{height:"100%"}}>
+                <IconButton sx={{marginTop: "auto"}} color="primary" onClick={ save }><SaveIcon /></IconButton>
+              </Box>
+              <Typography sx={{marginTop: "auto"}} color="primary">{ projectName }</Typography>
+            </Stack>
+          </Box>
+        </Grid>
+        <Grid item xs={12} md={6} sx={{display:'flex', flexDirection:'column', padding: `${paddingValue}px ${paddingValue/2}px ${paddingValue}px ${paddingValue}px`, height: 'calc(100vh - 35px)'}}>
           <Stack sx={{border: 'solid 1px #444', borderRadius: '15px', maxHeight: '100%'}}>
             <Box>
               <TabbedEditor 
@@ -119,7 +159,7 @@ function App() {
           </Stack>
           
         </Grid>        
-        <Grid item xs={12} md={6} sx={{display:'flex', flexDirection:'column', padding: `${paddingValue}px ${paddingValue}px ${paddingValue}px ${paddingValue/2}px`, height: '100vh'}}>
+        <Grid item xs={12} md={6} sx={{display:'flex', flexDirection:'column', padding: `${paddingValue}px ${paddingValue}px ${paddingValue}px ${paddingValue/2}px`, height: 'calc(100vh - 35px)'}}>
           <MockBrowser src={ htmlOutput } pageRequestMethod={ requestAndUpdate } requestMethod={ request } ></MockBrowser>
         </Grid>
       </Grid>

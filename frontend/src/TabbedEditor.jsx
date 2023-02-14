@@ -36,7 +36,9 @@ export function TabbedEditor(props) {
                 <Button sx={{height: "28px", 
                              marginTop: "auto", 
                              marginBottom: "auto", 
-                             marginRight: '10px'}} 
+                             marginLeft: '10px',
+                             marginRight: '10px'
+                            }} 
                         size="small" 
                         variant="contained"
                         disabled = { !props.isReady }

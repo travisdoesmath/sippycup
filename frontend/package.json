@@ -1,7 +1,7 @@
 {
-  "name": "fauxstack",
+  "name": "sippycup",
   "version": "0.1.0",
-  "homepage": "https://fauxstack.app",
+  "homepage": "https://sippycup.app",
   "private": true,
   "dependencies": {
     "@emotion/css": "^11.10.0",
