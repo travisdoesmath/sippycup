@@ -6,7 +6,7 @@ import reportWebVitals from './reportWebVitals';
 import { src } from './init';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-const baseUrl = "http://localhost:5050"
+const baseUrl = "https://api-lbptiuumfq-uc.a.run.app"
 
 let projectName = 'untitled project'
 

@@ -14,7 +14,7 @@ import IconButton from "@mui/material/IconButton";
 import { Typography } from "@mui/material";
 import SaveIcon from '@mui/icons-material/Save';
 
-const baseUrl = "http://localhost:5050"
+const baseUrl = "https://api-lbptiuumfq-uc.a.run.app"
 
 const createWorker = createWorkerFactory(() => import('./sippycup.js'));
 
@@ -27,8 +27,6 @@ const darkTheme = createTheme({
 });
 
 function App(props) {
-
-  console.log(props.src)
   const sippycup = useWorker(createWorker);
   const [projectName, updateProjectName] = useState(props.projectName)
   const [stdout, updateStdout] = useState('Python loading...\n');
