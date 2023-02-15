@@ -13,6 +13,7 @@ import { createWorkerFactory, useWorker } from "@shopify/react-web-worker";
 import IconButton from "@mui/material/IconButton";
 import { Typography } from "@mui/material";
 import SaveIcon from '@mui/icons-material/Save';
+import AboutModal from './AboutModal';
 
 const baseUrl = "https://api-lbptiuumfq-uc.a.run.app"
 
@@ -112,18 +113,21 @@ function App(props) {
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <Grid container height="100vh">
-        <Grid item xs={12}>
+        <Grid item xs={12} sx={{height: "45px"}}>
           <Box>
-          
-            <Stack direction="row" sx={{height: '35px'}}>
-              <Box sx={{height:"100%"}}>
-                <IconButton sx={{marginTop: "auto"}} color="primary" onClick={ save }><SaveIcon /></IconButton>
-              </Box>
-              <Typography sx={{marginTop: "auto"}} color="primary">{ projectName }</Typography>
-            </Stack>
+          <Stack direction="row"justifyContent="space-between">
+            <Stack direction="row" sx={{marginTop: "auto", marginBottom: "auto"}}>
+                <Box sx={{height:"100%"}}>
+                  <IconButton sx={{marginTop: "auto", height: '0px'}} color="primary" onClick={ save }><SaveIcon /></IconButton>
+                </Box>
+                <Typography sx={{marginTop: "auto"}} color="primary">{ projectName }</Typography>
+              </Stack>
+              <AboutModal></AboutModal>
+          </Stack>
+            
           </Box>
         </Grid>
-        <Grid item xs={12} md={6} sx={{display:'flex', flexDirection:'column', padding: `${paddingValue}px ${paddingValue/2}px ${paddingValue}px ${paddingValue}px`, height: 'calc(100vh - 35px)'}}>
+        <Grid item xs={12} md={6} sx={{display:'flex', flexDirection:'column', padding: `${paddingValue}px ${paddingValue/2}px ${paddingValue}px ${paddingValue}px`, height: 'calc(100vh - 45px)'}}>
           <Stack sx={{border: 'solid 1px #444', borderRadius: '15px', maxHeight: '100%'}}>
             <Box>
               <TabbedEditor 
@@ -157,7 +161,7 @@ function App(props) {
           </Stack>
           
         </Grid>        
-        <Grid item xs={12} md={6} sx={{display:'flex', flexDirection:'column', padding: `${paddingValue}px ${paddingValue}px ${paddingValue}px ${paddingValue/2}px`, height: 'calc(100vh - 35px)'}}>
+        <Grid item xs={12} md={6} sx={{display:'flex', flexDirection:'column', padding: `${paddingValue}px ${paddingValue}px ${paddingValue}px ${paddingValue/2}px`, height: 'calc(100vh - 45px)'}}>
           <MockBrowser src={ htmlOutput } pageRequestMethod={ requestAndUpdate } requestMethod={ request } ></MockBrowser>
         </Grid>
       </Grid>
