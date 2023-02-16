@@ -7,7 +7,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import Divider from '@mui/material/Divider';
-import Typography from '@mui/material/Typography';
+import Link from '@mui/material/Link';
 
 export default function AboutModal() {
     const [open, setOpen] = useState(false);
@@ -45,15 +45,15 @@ export default function AboutModal() {
                     </DialogContentText>
                     <Divider />
                     <DialogContentText mt={2} mb={2}>
-                        Sippycup was created by <a href="https://github.com/travisdoesmath/">@travisdoesmath</a>, source code is available <a href="https://github.com/travisdoesmath/sippycup">on github</a>.
+                        Sippycup was created by <Link underline="hover" target="_blank" rel="noopener" href="https://github.com/travisdoesmath/">@travisdoesmath</Link>, source code is available <Link underline="hover" target="_blank" href="https://github.com/travisdoesmath/sippycup">on github</Link>.
                         
                     </DialogContentText>
                     <Divider />
                     <DialogContentText mt={2}>
-                        If you're enjoying Sippycup, consider <a href="https://www.buymeacoffee.com/travisdoesmath">buying me a coffee</a>.
+                        If you're enjoying Sippycup, consider <Link underline="hover" target="_blank" href="https://www.buymeacoffee.com/travisdoesmath">buying me a coffee</Link>.
                     </DialogContentText>
                     <DialogActions>
-                        <Button onClick={handleClose}>OK</Button>
+                        <Button onClick={handleClose} variant="contained">OK</Button>
                     </DialogActions>
                 </DialogContent>
             </Dialog>

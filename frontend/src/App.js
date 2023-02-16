@@ -24,6 +24,14 @@ const paddingValue = 15
 const darkTheme = createTheme({
   palette: {
     mode: 'dark',
+    primary: {
+      main: '#8A99E6',
+      dark: '#8A99E6'
+    },
+    secondary: {
+      main: '#30F2AC',
+      dark: '#30F2AC'
+    }
   },
 });
 
@@ -115,7 +123,7 @@ function App(props) {
       <Grid container height="100vh">
         <Grid item xs={12} sx={{height: "45px"}}>
           <Box>
-          <Stack direction="row"justifyContent="space-between">
+          <Stack direction="row" justifyContent="space-between" sx={{marginLeft: '15px', marginRight: '15px'}}>
             <Stack direction="row" sx={{marginTop: "auto", marginBottom: "auto"}}>
                 <Box sx={{height:"100%"}}>
                   <IconButton sx={{marginTop: "auto", height: '0px'}} color="primary" onClick={ save }><SaveIcon /></IconButton>
@@ -127,7 +135,19 @@ function App(props) {
             
           </Box>
         </Grid>
-        <Grid item xs={12} md={6} sx={{display:'flex', flexDirection:'column', padding: `${paddingValue}px ${paddingValue/2}px ${paddingValue}px ${paddingValue}px`, height: 'calc(100vh - 45px)'}}>
+        <Grid item xs={12} md={6} 
+          sx={{
+            display:'flex', 
+            flexDirection:'column', 
+            paddingTop: `${paddingValue}px`, 
+            paddingBottom: `${paddingValue}px`,
+            paddingLeft: `${paddingValue}px`,
+            paddingRight: {
+              xs: `${paddingValue}px`,
+              md: `${0.5*paddingValue}px`
+            },
+            height: 'calc(100vh - 45px)',
+            minWidth: '400px'}}>
           <Stack sx={{border: 'solid 1px #444', borderRadius: '15px', maxHeight: '100%'}}>
             <Box>
               <TabbedEditor 
@@ -161,7 +181,19 @@ function App(props) {
           </Stack>
           
         </Grid>        
-        <Grid item xs={12} md={6} sx={{display:'flex', flexDirection:'column', padding: `${paddingValue}px ${paddingValue}px ${paddingValue}px ${paddingValue/2}px`, height: 'calc(100vh - 45px)'}}>
+        <Grid item xs={12} md={6} 
+          sx={{
+            display:'flex', 
+            flexDirection:'column', 
+            paddingTop: `${paddingValue}px`, 
+            paddingBottom: `${paddingValue}px`,
+            paddingLeft: {
+              xs: `${paddingValue}px`,
+              md: `${0.5*paddingValue}px`
+            },
+            paddingRight: `${paddingValue}px`, 
+            height: 'calc(100vh - 45px)',
+            minWidth: '400px'}}>
           <MockBrowser src={ htmlOutput } pageRequestMethod={ requestAndUpdate } requestMethod={ request } ></MockBrowser>
         </Grid>
       </Grid>
